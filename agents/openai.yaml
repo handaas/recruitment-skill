@@ -1,0 +1,4 @@
+interface:
+  display_name: "招聘大数据报告"
+  short_description: "基于 HandaaS 招聘大数据 MCP，生成雇主招聘画像 / 招聘需求统计 / 招聘趋势 / 职位薪酬 / 招聘职位明细的专业 HTML / Markdown / JSON 报告。"
+  default_prompt: "使用 $recruitment-report 生成「企业名称」的招聘大数据报告：调用招聘 MCP 工具，产出 HTML + Markdown + JSON 三件套。"

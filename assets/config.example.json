@@ -1,0 +1,9 @@
+{
+  "_comment": "招聘大数据报告 skill 的连接配置样例。复制为 config.json 后按需修改。skill 不在此处理凭证；凭证由 MCP server 自己的 .env 提供。",
+  "mcp_server_root": "/Users/sunjackson/Project/handaas-mcp-server",
+  "remote_mcp": {
+    "_comment": "Remote MCP（streamable-http）。设为空则回退本地 stdio 连接。也可改用环境变量 RECRUITMENT_MCP_URL / RECRUITMENT_MCP_TOKEN。",
+    "url": "",
+    "token": ""
+  }
+}
