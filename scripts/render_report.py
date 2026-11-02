@@ -21,9 +21,9 @@ import html
 import json
 import pathlib
 import sys
-from typing import Any, Dict, Iterable, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Sequence
 
-from common import REPORT_TYPE, json_dumps
+from common import json_dumps
 
 
 # --------------------------------------------------------------------------- #
@@ -157,7 +157,7 @@ def render_table(rows: Sequence[Any], columns: Sequence[tuple[str, str]] | None 
             # Neither matches a real key; assume (key, label) convention
             key, label = (a or ""), (b or a or "")
         norm_cols.append((key, label))
-    head = "".join(f"<th>{html.escape(label)}</th>" for _, label in norm_cols)
+    head = "".join(f"<th>{html.escape(label or '')}</th>" for _, label in norm_cols)
     body = []
     for row in rows:
         cells = "".join(f"<td>{_cell_html(row.get(key))}</td>" for key, _ in norm_cols)
@@ -250,35 +250,71 @@ def render_records(records: Sequence[Any]) -> str:
 # --------------------------------------------------------------------------- #
 
 ECHARTS_VENDOR_PATH = (
-    pathlib.Path(__file__).resolve().parents[2] / "assets" / "vendor" / "echarts.min.js"
+    pathlib.Path(__file__).resolve().parents[1] / "assets" / "vendor" / "echarts.min.js"
 )
-ECHARTS_CDN = "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"
 
 
-def _echarts_inline_or_cdn() -> str:
-    """Inline the vendored ECharts bundle; fall back to a CDN script tag."""
+def _load_echarts() -> str:
+    """Embed the skill-local library; never generate a hidden online dependency."""
     try:
-        if ECHARTS_VENDOR_PATH.exists():
-            return ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
-    except Exception:
-        pass
-    return f'document.write("ECharts offline bundle missing. See assets/vendor/echarts.min.js. CDN fallback loaded.");var s=document.createElement("script");s.src="{ECHARTS_CDN}";document.head.appendChild(s);'
+        javascript = ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise RuntimeError(f"缺少或无法读取本地 ECharts 图表库：{ECHARTS_VENDOR_PATH}；请恢复 skill 的 assets/vendor/echarts.min.js 后重试。") from exc
+    if not javascript.strip():
+        raise RuntimeError(f"本地 ECharts 图表库为空：{ECHARTS_VENDOR_PATH}；不能生成离线图表报告。")
+    return javascript
 
 
-# Lightweight data-driven chart bootstrapper. Reads data-spec JSON from each
-# .chart-canvas and renders the matching ECharts option.
+# The dependency and DOM can become ready in either order. Retry with a bound,
+# recover on script load, and initialize every canvas at most once.
 _HANDAAS_CHART_JS = r"""
 (function(){
-  window.__echarts_instances=[];
+  if(window.__handaas_boot_charts){window.__handaas_boot_charts();return;}
+  window.__echarts_instances=window.__echarts_instances||[];
+  var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
+  var timer=null, retries=0, MAX_RETRIES=100;
+  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
+  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  function summarize(nodes){
+    status.total=nodes.length;status.ready=0;status.failed=0;
+    nodes.forEach(function(el){
+      if(el.getAttribute('data-chart-state')==='ready'){status.ready++;}
+      else if(el.getAttribute('data-chart-state')==='error'){status.failed++;}
+    });
+    status.state=status.ready===status.total?'ready':
+      (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
+  }
   function boot(){
-    if(typeof echarts==='undefined'){return;}
-    var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-    var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
-    document.querySelectorAll('.chart-canvas').forEach(function(el){
-      var raw=el.getAttribute('data-spec'); if(!raw){return;}
-      var spec; try{spec=JSON.parse(raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));}catch(e){return;}
-      var chart=echarts.init(el,null,{renderer:'svg'});
-      window.__echarts_instances.push(chart);
+    if(document.readyState==='loading'){return;}
+    var nodes=document.querySelectorAll('.chart-canvas');
+    if(!nodes.length){summarize(nodes);return;}
+    if(!window.echarts || typeof window.echarts.init!=='function'){
+      var exhausted=retries>=MAX_RETRIES;
+      nodes.forEach(function(el){
+        if(el.__handaas_chart_ready){return;}
+        el.__handaas_dependency_error=true;
+        el.setAttribute('data-chart-state',exhausted?'error':'waiting');
+        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+      });
+      summarize(nodes);
+      if(!exhausted && timer===null){
+        retries++;
+        timer=setTimeout(function(){timer=null;boot();},100);
+      }
+      return;
+    }
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    nodes.forEach(function(el){
+      if(el.__handaas_chart_ready || (el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error)){return;}
+      var chart=null;
+      try{
+        var raw=el.getAttribute('data-spec');
+        if(!raw){throw new Error('Missing chart configuration');}
+        // getAttribute already decodes HTML entities; a second decode corrupts labels.
+        var spec=JSON.parse(raw);
+        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        el.textContent='';
+        chart=window.echarts.init(el,null,{renderer:'svg'});
       var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
       if(spec.type==='line'){
         opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
@@ -304,26 +340,36 @@ _HANDAAS_CHART_JS = r"""
         opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
         opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
       }
-      chart.setOption(opt);
-      window.addEventListener('resize',function(){chart.resize();});
+        chart.setOption(opt);
+        el.__handaas_chart_ready=true;
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','ready');
+        window.__echarts_instances.push(chart);
+      }catch(e){
+        if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','error');
+        el.textContent='图表绘制失败，请查看数据明细。';
+      }
     });
+    summarize(nodes);
   }
-  if(document.readyState!=='loading'){boot();}else{document.addEventListener('DOMContentLoaded',boot);}
+  window.__handaas_boot_charts=boot;
   window.__echarts_resize_all=function(){
     (window.__echarts_instances||[]).forEach(function(c){try{c.resize();}catch(e){}});
   };
+  window.addEventListener('resize',window.__echarts_resize_all);
+  window.addEventListener('load',boot);
+  window.addEventListener('pageshow',boot);
+  window.addEventListener('handaas:echarts-ready',boot);
+  // A very late external script can still recover after the bounded retry ends.
+  document.addEventListener('load',function(event){
+    if(event.target && event.target.tagName==='SCRIPT'){boot();}
+  },true);
+  document.addEventListener('DOMContentLoaded',boot);
+  boot();
 })();
 """
-
-
-def _load_echarts() -> str:
-    """Return the ECharts JS to embed inline; fall back to a CDN <script src>."""
-    try:
-        if ECHARTS_VENDOR_PATH.exists():
-            return ECHARTS_VENDOR_PATH.read_text(encoding="utf-8")
-    except Exception:
-        pass
-    return ""  # caller falls back to CDN tag
 
 
 def _num(value: Any) -> float:
@@ -440,7 +486,7 @@ def chart_radar(title: str, indicators: Sequence[Mapping[str, Any]], series: Seq
 
 def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str:
     """Render a single section spec into HTML (without pairing). Returns '' if empty."""
-    key = spec.get("key")
+    key = spec.get("key") or ""
     body = core.get(key)
     kind = spec.get("kind")
     title_html = f'<h3 class="biz-subsection-title">{esc(spec.get("title", ""))}</h3>'
@@ -717,7 +763,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
         _scope_parts.append(("覆盖范围", str(caliber["data_scope"])[:80]))
     scope_bar_html = ""
     if _scope_parts:
-        _scope_items = "".join(f'<span class="scope-item"><em>{esc(l)}</em>{esc(v)}</span>' for l, v in _scope_parts)
+        _scope_items = "".join(f'<span class="scope-item"><em>{esc(label)}</em>{esc(v)}</span>' for label, v in _scope_parts)
         scope_bar_html = f'<div class="cover-scope-bar">{_scope_items}</div>'
 
     # 3) Supplementary metrics from insight evidence (only when sparse)
@@ -946,6 +992,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     .chart-box-gauge {{ max-width:380px; }}
     .chart-title {{ margin:0 0 8px; color:#0b3768; font-size:15px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }}
     .chart-canvas {{ width:100%; height:300px; }}
+    .chart-canvas[data-chart-state="waiting"],.chart-canvas[data-chart-state="error"] {{ display:flex; align-items:center; justify-content:center; color:#64748b; font-size:13px; text-align:center; }}
     .chart-box-gauge .chart-canvas {{ height:240px; }}
     .chart-data {{ margin-top:10px; }}
     .chart-data summary {{ cursor:pointer; color:#0b5ca8; font-size:12px; font-weight:700; padding:4px 0; }}
@@ -965,7 +1012,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     .glossary-term {{ display:flex; align-items:flex-start; padding:12px 14px; background:#f1f6fb; color:#0b5ca8; font-size:13px; font-weight:800; border-right:3px solid #0b5ca8; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }}
     .glossary-def {{ padding:12px 16px; color:#334155; font-size:13px; line-height:1.7; }}
   </style>
-  <script>{_echarts_inline_or_cdn()}</script>
+  <script>{_load_echarts()}</script>
   <script>{_HANDAAS_CHART_JS}</script>
 </head>
 <body>
@@ -1078,7 +1125,7 @@ def render_markdown(data: Dict[str, Any]) -> str:
                 if v not in (None, "", [], {}):
                     lines.append(f"| {k} | {text(v)} |")
             lines.append("")
-        elif kind == "table":
+        elif kind in ("table", "line", "bar", "pie", "donut", "multi_line"):
             rows = [r for r in as_list(body) if isinstance(r, dict)]
             if rows:
                 lines.append(f"### {spec.get('title', key)}\n")

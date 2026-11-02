@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""MCP client for the trademark-report skill.
+"""MCP client for the recruitment-report skill.
 
 Connects to the upstream HandaaS MCP server in two ways:
 
 1. **Remote MCP (preferred)** — set ``RECRUITMENT_MCP_URL`` (or the generic
-   ``HANDAAS_MCP_URL``) to a streamable-http endpoint. A token may be supplied
-   via ``RECRUITMENT_MCP_TOKEN`` / ``HANDAAS_MCP_TOKEN``.
+   ``HANDAAS_MCP_URL``) to a streamable-http endpoint. The official HandaaS
+   endpoint uses a runtime ``token`` query parameter; other hosts use Bearer auth.
 2. **Local MCP (fallback)** — when no URL is configured, the client boots the
    local ``handaas-mcp-server/recruitment-mcp-server/server/mcp_server.py`` over
    stdio using the MCP SDK. The local server reads its own ``.env`` for
@@ -15,8 +15,8 @@ Usage::
 
     python mcp_client.py ping
     python mcp_client.py list-tools
-    python mcp_client.py call-tool --tool trademark_get_trademark_base_info \
-        --arguments-json '{"keyword": "某商标"}'
+    python mcp_client.py call-tool --tool recruitment_employer_profile \
+        --arguments-json '{"matchKeyword": "某企业全称", "keywordType": "name"}'
 
 This file prints only redacted config in errors and never prints
 tokens/signatures/credentials.
@@ -26,18 +26,19 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import logging
 import os
 import pathlib
+import urllib.parse
+from contextlib import contextmanager
 from typing import Any, Dict, Optional
 
 from common import (
     DOMAIN_UPPER,
     MCP_SERVER_DIR,
-    REPORT_TYPE,
     ConfigError,
     env,
     is_placeholder,
-    json_dumps,
     load_config,
     print_json,
     redact,
@@ -56,7 +57,7 @@ def resolve_mcp_url() -> Optional[str]:
 
 
 def resolve_mcp_token() -> Optional[str]:
-    token = env(f"{DOMAIN_UPPER}_MCP_TOKEN", "HANDAAS_MCP_TOKEN")
+    token = env(f"{DOMAIN_UPPER}_MCP_TOKEN")
     if not token or is_placeholder(token):
         return None
     return token
@@ -86,7 +87,9 @@ def get_connection_config() -> Dict[str, Any]:
     """Return a descriptor of how we will connect (remote preferred)."""
     url = resolve_mcp_url()
     if url:
-        return {"mode": "remote", "url": url, "token": resolve_mcp_token() or ""}
+        token = resolve_mcp_token() or ""
+        _remote_auth_options(url, token)
+        return {"mode": "remote", "url": url, "token": token}
     local_path = resolve_local_server_path()
     if local_path:
         return {"mode": "local", "server_path": str(local_path)}
@@ -110,6 +113,9 @@ def _plain(value: Any) -> Any:
 def _extract_tool_result(value: Any) -> Any:
     plain = _plain(value)
     if isinstance(plain, dict):
+        # MCP CallToolResult failure state takes precedence over any content.
+        if plain.get("isError") is True or plain.get("is_error") is True:
+            return {"_error": "MCP tool call failed"}
         structured = plain.get("structuredContent") or plain.get("structured_content")
         if structured is not None:
             if isinstance(structured, dict) and set(structured.keys()) == {"result"}:
@@ -147,6 +153,96 @@ def tool_count(payload: Any) -> int:
 # Remote MCP (streamable-http)
 # --------------------------------------------------------------------------- #
 
+def _remote_auth_options(url: str, token: str) -> tuple[Dict[str, str], Dict[str, str]]:
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        query = dict(urllib.parse.parse_qsl(parsed.query, keep_blank_values=True))
+    except ValueError:
+        raise ConfigError("Remote MCP URL 格式无效") from None
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ConfigError("Remote MCP 必须使用完整的 HTTP / HTTPS 地址")
+    official = parsed.hostname == "mcp.handaas.com"
+    if official and parsed.scheme != "https":
+        raise ConfigError("旷湖平台 MCP 必须使用 HTTPS")
+    if "token" in query:
+        if not query["token"]:
+            raise ConfigError("请移除 MCP URL 中的空 token 参数，并通过环境变量提供完整 Token")
+        return {}, {}
+    if official:
+        if not token:
+            raise ConfigError("旷湖平台 MCP 缺少 Token；请设置 RECRUITMENT_MCP_TOKEN")
+        return {}, {"token": token}
+    return ({"Authorization": f"Bearer {token}"} if token else {}), {}
+
+
+class _CredentialLogFilter(logging.Filter):
+    def __init__(self, url: str, token: str):
+        super().__init__()
+        values = [token]
+        try:
+            values.extend(value for key, value in urllib.parse.parse_qsl(
+                urllib.parse.urlsplit(url).query
+            ) if key.lower() in {"token", "signature", "secret", "secret_id", "secret_key"})
+        except ValueError:
+            pass
+        self.values = sorted({
+            variant for value in values if value
+            for variant in (value, urllib.parse.quote(value, safe=""), urllib.parse.quote_plus(value))
+        }, key=len, reverse=True)
+
+    def redact_text(self, text: str) -> str:
+        for value in self.values:
+            text = text.replace(value, "***REDACTED***")
+        return text
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.msg = self.redact_text(record.getMessage())
+        record.args = ()
+        if record.exc_info:
+            record.exc_text = self.redact_text(logging.Formatter().formatException(record.exc_info))
+            record.exc_info = None
+        elif record.exc_text:
+            record.exc_text = self.redact_text(record.exc_text)
+        if record.stack_info:
+            record.stack_info = self.redact_text(record.stack_info)
+        return True
+
+
+@contextmanager
+def _private_remote(url: str, token: str):
+    privacy = _CredentialLogFilter(url, token)
+    handlers = set(logging.getLogger().handlers)
+    for logger in logging.Logger.manager.loggerDict.values():
+        if isinstance(logger, logging.Logger):
+            handlers.update(logger.handlers)
+    if logging.lastResort is not None:
+        handlers.add(logging.lastResort)
+    for handler in handlers:
+        handler.addFilter(privacy)
+    try:
+        yield
+    except ConfigError:
+        raise
+    except Exception as exc:
+        statuses = set()
+
+        def collect_statuses(error):
+            status = getattr(getattr(error, "response", None), "status_code", None)
+            if isinstance(status, int):
+                statuses.add(status)
+            for child in getattr(error, "exceptions", ()):
+                collect_statuses(child)
+
+        collect_statuses(exc)
+        status_text = "；HTTP " + "/".join(map(str, sorted(statuses))) if statuses else ""
+        raise ConfigError(
+            f"Remote MCP 请求失败（{type(exc).__name__}{status_text}）；请核对地址、Token 授权和网络状态"
+        ) from None
+    finally:
+        for handler in handlers:
+            handler.removeFilter(privacy)
+
+
 async def _remote_call_tool(url: str, token: str, tool: str, arguments: Dict[str, Any], timeout: int) -> Any:
     try:
         import httpx
@@ -155,16 +251,15 @@ async def _remote_call_tool(url: str, token: str, tool: str, arguments: Dict[str
     except Exception as exc:  # pragma: no cover
         raise ConfigError("调用 Remote MCP 需要 Python 包 mcp 和 httpx。请运行：pip install 'mcp>=1.6.0' httpx") from exc
 
-    headers: Dict[str, str] = {}
-    if token and "token=" not in url:
-        headers["Authorization"] = f"Bearer {token}"
-    async with httpx.AsyncClient(headers=headers, timeout=httpx.Timeout(timeout, read=max(timeout, 300)), follow_redirects=True) as http_client:
-        async with streamable_http_client(url=url, http_client=http_client) as streams:
-            read_stream, write_stream, *_ = streams
-            async with ClientSession(read_stream, write_stream) as session:
-                await session.initialize()
-                result = await session.call_tool(tool, arguments)
-                return _extract_tool_result(result)
+    with _private_remote(url, token):
+        headers, params = _remote_auth_options(url, token)
+        async with httpx.AsyncClient(headers=headers, params=params, timeout=httpx.Timeout(timeout, read=max(timeout, 300)), follow_redirects=True) as http_client:
+            async with streamable_http_client(url=url, http_client=http_client) as streams:
+                read_stream, write_stream, *_ = streams
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    result = await session.call_tool(tool, arguments)
+                    return _extract_tool_result(result)
 
 
 async def _remote_list_tools(url: str, token: str, timeout: int) -> Any:
@@ -175,16 +270,15 @@ async def _remote_list_tools(url: str, token: str, timeout: int) -> Any:
     except Exception as exc:  # pragma: no cover
         raise ConfigError("列出 Remote MCP tools 需要 Python 包 mcp 和 httpx。请运行：pip install 'mcp>=1.6.0' httpx") from exc
 
-    headers: Dict[str, str] = {}
-    if token and "token=" not in url:
-        headers["Authorization"] = f"Bearer {token}"
-    async with httpx.AsyncClient(headers=headers, timeout=httpx.Timeout(timeout, read=max(timeout, 300)), follow_redirects=True) as http_client:
-        async with streamable_http_client(url=url, http_client=http_client) as streams:
-            read_stream, write_stream, *_ = streams
-            async with ClientSession(read_stream, write_stream) as session:
-                await session.initialize()
-                result = await session.list_tools()
-                return _plain(result)
+    with _private_remote(url, token):
+        headers, params = _remote_auth_options(url, token)
+        async with httpx.AsyncClient(headers=headers, params=params, timeout=httpx.Timeout(timeout, read=max(timeout, 300)), follow_redirects=True) as http_client:
+            async with streamable_http_client(url=url, http_client=http_client) as streams:
+                read_stream, write_stream, *_ = streams
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    result = await session.list_tools()
+                    return _plain(result)
 
 
 # --------------------------------------------------------------------------- #
@@ -239,8 +333,9 @@ def _require_connection() -> Dict[str, Any]:
     conn = get_connection_config()
     if not conn:
         raise ConfigError(
-            "未配置 MCP 连接。请设置环境变量 RECRUITMENT_MCP_URL（Remote MCP streamable-http），"
-            "或设置 HANDAAS_MCP_SERVER_ROOT 指向 handaas-mcp-server 仓库根目录以使用本地 stdio 连接。"
+            "未配置 MCP 连接。请设置 RECRUITMENT_MCP_URL="
+            "https://mcp.handaas.com/recruiting/recruiting_bigdata 与 RECRUITMENT_MCP_TOKEN，"
+            "或设置 HANDAAS_MCP_SERVER_ROOT 使用本地 stdio 连接。"
         )
     return conn
 

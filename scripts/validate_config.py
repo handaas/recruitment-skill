@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate MCP connection config for the trademark-report skill (no secrets printed)."""
+"""Validate recruitment-report MCP connection config without exposing credentials."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,10 @@ from mcp_client import get_connection_config, resolve_local_server_path
 def validate(*, allow_placeholders: bool = False) -> Dict[str, Any]:
     errors: List[str] = []
     warnings: List[str] = []
-    conn = get_connection_config()
+    try:
+        conn, connection_error = get_connection_config(), None
+    except ConfigError as exc:
+        conn, connection_error = {}, str(exc)
     modes: Dict[str, Any] = {"remote_mcp": {"ok": False}, "local_mcp": {"ok": False}}
 
     if conn.get("mode") == "remote":
@@ -20,6 +23,8 @@ def validate(*, allow_placeholders: bool = False) -> Dict[str, Any]:
         if is_placeholder(url):
             (warnings if allow_placeholders else errors).append("Remote MCP URL 仍是占位值")
         modes["remote_mcp"] = {"ok": not errors, "config": redact(conn)}
+    elif connection_error:
+        errors.append(connection_error)
     else:
         warnings.append("未设置 RECRUITMENT_MCP_URL / HANDAAS_MCP_URL；将尝试本地 stdio 连接。")
 
