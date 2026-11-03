@@ -273,6 +273,7 @@ _HANDAAS_CHART_JS = r"""
   window.__echarts_instances=window.__echarts_instances||[];
   var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
   var timer=null, retries=0, MAX_RETRIES=100;
+  var layoutRetries=0, MAX_LAYOUT_RETRIES=50;
   var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
   var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
   function summarize(nodes){
@@ -284,6 +285,7 @@ _HANDAAS_CHART_JS = r"""
     status.state=status.ready===status.total?'ready':
       (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
   }
+  function raf(fn){if(window.requestAnimationFrame){window.requestAnimationFrame(fn);}else{fn();}}
   function boot(){
     if(document.readyState==='loading'){return;}
     var nodes=document.querySelectorAll('.chart-canvas');
@@ -304,8 +306,24 @@ _HANDAAS_CHART_JS = r"""
       return;
     }
     if(timer!==null){clearTimeout(timer);timer=null;}
+    var pendingLayout=0;
     nodes.forEach(function(el){
-      if(el.__handaas_chart_ready || (el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error)){return;}
+      if(el.__handaas_chart_ready){return;}
+      if(el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error){return;}
+      if(window.ResizeObserver && !el.__handaas_resize_observer){
+        el.__handaas_resize_observer=new ResizeObserver(function(){
+          var current=el.__handaas_chart;
+          if(current && typeof current.resize==='function'){try{current.resize();}catch(ignored){}}
+          else{boot();}
+        });
+        el.__handaas_resize_observer.observe(el);
+      }
+      if((el.getClientRects && el.getClientRects().length===0) || el.clientWidth<2 || el.clientHeight<2){
+        el.setAttribute('data-chart-state','waiting');
+        el.textContent='图表等待布局完成后渲染，数据明细仍可查看。';
+        pendingLayout++;
+        return;
+      }
       var chart=null;
       try{
         var raw=el.getAttribute('data-spec');
@@ -341,10 +359,12 @@ _HANDAAS_CHART_JS = r"""
         opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
       }
         chart.setOption(opt);
+        el.__handaas_chart=chart;
         el.__handaas_chart_ready=true;
         el.__handaas_dependency_error=false;
         el.setAttribute('data-chart-state','ready');
         window.__echarts_instances.push(chart);
+        raf(function(){try{chart.resize();}catch(ignored){}});
       }catch(e){
         if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
         el.__handaas_dependency_error=false;
@@ -353,20 +373,31 @@ _HANDAAS_CHART_JS = r"""
       }
     });
     summarize(nodes);
+    if(pendingLayout && layoutRetries<MAX_LAYOUT_RETRIES){
+      layoutRetries++;
+      setTimeout(boot,100);
+    }
   }
   window.__handaas_boot_charts=boot;
   window.__echarts_resize_all=function(){
     (window.__echarts_instances||[]).forEach(function(c){try{c.resize();}catch(e){}});
   };
+  function bootAfterLayout(){
+    raf(function(){boot();window.__echarts_resize_all();});
+  }
   window.addEventListener('resize',window.__echarts_resize_all);
-  window.addEventListener('load',boot);
-  window.addEventListener('pageshow',boot);
-  window.addEventListener('handaas:echarts-ready',boot);
+  window.addEventListener('load',bootAfterLayout);
+  window.addEventListener('pageshow',bootAfterLayout);
+  window.addEventListener('handaas:echarts-ready',bootAfterLayout);
+  window.addEventListener('orientationchange',bootAfterLayout);
   // A very late external script can still recover after the bounded retry ends.
   document.addEventListener('load',function(event){
     if(event.target && event.target.tagName==='SCRIPT'){boot();}
   },true);
-  document.addEventListener('DOMContentLoaded',boot);
+  document.addEventListener('DOMContentLoaded',bootAfterLayout);
+  document.addEventListener('visibilitychange',boot);
+  if(document.fonts && document.fonts.ready){document.fonts.ready.then(function(){window.__echarts_resize_all();});}
+  [0,300,1000,2500].forEach(function(ms){setTimeout(function(){boot();window.__echarts_resize_all();},ms);});
   boot();
 })();
 """

@@ -23,7 +23,10 @@
 
 ```text
 请帮我安装并配置 recruitment-skill：
-1. 阅读并遵循 https://github.com/handaas/recruitment-skill 的 SKILL.md 与 README.md，按当前环境规范安装到实际包含 SKILL.md 的目录；保留已有配置，不默认全局注册。
+1. 阅读并遵循本 Skill 的 SKILL.md 与 README.md，仓库地址按网络环境二选一：
+   国外环境：https://github.com/handaas/recruitment-skill
+   国内环境：https://gitee.com/handaas/recruitment-skill
+   再按当前环境规范安装到实际包含 SKILL.md 的目录；保留已有配置，不默认全局注册。
 2. 使用旷湖SKILL平台在线 MCP：服务地址见本 README「接入 MCP 服务」，平台返回的地址优先。不部署本地 MCP，不索要 INTEGRATOR_ID / SECRET_ID / SECRET_KEY。
 3. 将完整 handaas-token 作为环境变量 `RECRUITMENT_MCP_TOKEN` 注入运行 Python 的进程，并设置 `RECRUITMENT_MCP_URL`；环境变量必须真正到达该进程，只保存文件或在别的终端 export 不算完成。
 4. Token 原样保留逗号等字符：不拆分、不解码、不放进 URL、不手动加 Bearer。不要把 Token 写入仓库、SKILL.md、README、示例配置、报告或终端历史；若只能使用仓库外的私有环境文件，权限设为 0600，并由启动器显式加载。不要回显 Token、请求头或原始鉴权错误；Token 注意保管，请勿泄露。
