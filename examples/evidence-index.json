@@ -17,7 +17,7 @@
         "business-review.json": "8f77ddba5ce6430a1cca109f3be0de2dd14392810c8834a540ae2eb1478882d6",
         "browser-check.json": "63c8721bc98d2db7404c3f04191e5e410d6f80281c318c0ac79f284d67d366d8"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/01-tech-hiring.md"
+      "audit_record": "../test-records/live-replaced-20261027/01-tech-hiring.md"
     },
     {
       "skill": "recruitment-skill",
@@ -35,7 +35,7 @@
         "business-review.json": "a3d9bcd349c9e684fab75be2442ffec96f2d8a8fb6cd4638dfbba76aaec74aa3",
         "browser-check.json": "dea5d2def0769b6ea69d4b3eea302e1bb5e29f296083726ff931d08ec3741fa5"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/02-ev-job-details.md"
+      "audit_record": "../test-records/live-replaced-20261027/02-ev-job-details.md"
     },
     {
       "skill": "recruitment-skill",
@@ -53,7 +53,7 @@
         "business-review.json": "968a1f797638be428ef12e9b0db4feaf6b8f315743e3bae3435d39bf797ce821",
         "browser-check.json": "7f31b1adf0ef92b763b77af356d5f4c9a5ec709f047fd5f34d607ff20ecf5d2c"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/04-platform-jobs.md"
+      "audit_record": "../test-records/live-replaced-20261027/04-platform-jobs.md"
     },
     {
       "skill": "recruitment-skill",
@@ -71,7 +71,7 @@
         "business-review.json": "71437cdee91012158624c83ceea427afe11b71ebd2dae3bdda75b65b1a45867a",
         "browser-check.json": "7febdc3e1e6fb6de41a2f4611da1d2f2f3f7563e95a3c13babf13ab53164aa7c"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/05-consumer-hiring.md"
+      "audit_record": "../test-records/live-replaced-20261027/05-consumer-hiring.md"
     },
     {
       "skill": "recruitment-skill",
@@ -89,7 +89,7 @@
         "business-review.json": "a1205f728a3822c61dd7a9fc809c06c0e5e29dd1de05e08b650ebc6a0ab21c48",
         "browser-check.json": "93f9fccdeeebfcc11f96df9a8ecdfdded08e07bfc06157ebea15745809874f50"
       },
-      "audit_record": "../../test-records/live-replaced-20261027/06-compact-jobs.md"
+      "audit_record": "../test-records/live-replaced-20261027/06-compact-jobs.md"
     }
   ]
 }
