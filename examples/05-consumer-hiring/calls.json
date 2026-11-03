@@ -1,0 +1,251 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069191908905000",
+    "elapsed_seconds": 1.027,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 0
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 0
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 12315.2173913043
+      }
+    ],
+    "response_sha256": "bca32485c4e639ac21c433be707565b364bd25d60de42592d7203c6382d68332"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069191908905000",
+    "elapsed_seconds": 0.971,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 0
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 12315.2173913043
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 0
+      }
+    ],
+    "response_sha256": "38b0a19bb7b0054166c682f1aec3d5baa656d53f7800243f0fe0a4aefdc13fd2"
+  },
+  {
+    "tool": "recruitment_demand_analysis",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name",
+      "view": "statistics",
+      "listLimit": 50
+    },
+    "invocation_id": "1793069191908905000",
+    "elapsed_seconds": 0.646,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 0
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 12315.2173913043
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 0
+      }
+    ],
+    "response_sha256": "38b0a19bb7b0054166c682f1aec3d5baa656d53f7800243f0fe0a4aefdc13fd2"
+  },
+  {
+    "tool": "recruitment_salary",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 8
+    },
+    "invocation_id": "1793069191908905000",
+    "elapsed_seconds": 0.707,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 8,
+    "reported_total": 49,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSalary.max",
+        "value": 10000.0
+      },
+      {
+        "path": "resultList[0].workingSalary.min",
+        "value": 4000.0
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "total",
+        "value": 49
+      }
+    ],
+    "response_sha256": "9b99d4c94f39344af8a9a322935b29b06d74f6e869a3520661f214c2f0b80c10"
+  },
+  {
+    "tool": "recruitment_job_search",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 8
+    },
+    "invocation_id": "1793069191908905000",
+    "elapsed_seconds": 0.456,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 8,
+    "reported_total": 49,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSalary.max",
+        "value": 10000.0
+      },
+      {
+        "path": "resultList[0].workingSalary.min",
+        "value": 4000.0
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "total",
+        "value": 49
+      }
+    ],
+    "response_sha256": "9b99d4c94f39344af8a9a322935b29b06d74f6e869a3520661f214c2f0b80c10"
+  }
+]

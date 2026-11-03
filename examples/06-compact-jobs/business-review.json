@@ -1,0 +1,31 @@
+{
+  "id": "06-compact-jobs",
+  "verdict": "acceptable",
+  "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+  "checks": [
+    {
+      "expectation": "职位明细最多 5 条或实际返回数",
+      "status": "pass",
+      "evidence": "job_records 当前页 5 条，符合 pageSize=5。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    },
+    {
+      "expectation": "总量与 5 条样本明确区分",
+      "status": "pass",
+      "evidence": "职位检索命中总数 25686 与当前页 5 条分别披露。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    },
+    {
+      "expectation": "HTML、Markdown、JSON 的职位字段一致",
+      "status": "pass",
+      "evidence": "独立重渲染检查通过；JSON、HTML、Markdown 使用同一批职位名称、城市和薪酬字段。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    }
+  ],
+  "issues": [],
+  "evidence_binding": {
+    "report.json": "c7bf07d5e43b9a031f065b1d6fc4a5e31dae9b847c34570d067a19de0c99d2c5",
+    "report.html": "cc8ebfce04c91bc3c475c17e7b71be802ea085910285de53534f243db52f55eb",
+    "report.md": "122880dbd3c4f953630de41542cfde632fa778b2888b7245961875cca9d990b1",
+    "calls.json": "8cc47cb922d9f11c1e2958f470a25dba377ef3fa47410edc96ec6217e690ff73",
+    "result.json": "520964f75d368bce38d81cf22fb685162b9248c2ad16f3902dbf0796ba46407c",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

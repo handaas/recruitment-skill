@@ -1,0 +1,321 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069187917765000",
+    "elapsed_seconds": 0.74,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 5337
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 18409
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 11960.2087666195
+      }
+    ],
+    "response_sha256": "a7078d466094fa6108ea34765ac670ef21260a4a0dfa75e6b35f0236a5228c34"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069187917765000",
+    "elapsed_seconds": 0.495,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 18409
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 11960.2087666195
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 5337
+      },
+      {
+        "path": "truncatedFields.businessTags.total",
+        "value": 109
+      },
+      {
+        "path": "truncatedFields.businessTags.returned",
+        "value": 50
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 438
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "ccc058d98cb9176151df2cb3a6ca512e9809a26d9012e52a75203234668a20c3"
+  },
+  {
+    "tool": "recruitment_demand_analysis",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "view": "statistics",
+      "listLimit": 50
+    },
+    "invocation_id": "1793069187917765000",
+    "elapsed_seconds": 0.295,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 18409
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 11960.2087666195
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 6258.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 5337
+      },
+      {
+        "path": "truncatedFields.businessTags.total",
+        "value": 109
+      },
+      {
+        "path": "truncatedFields.businessTags.returned",
+        "value": 50
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 438
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "ccc058d98cb9176151df2cb3a6ca512e9809a26d9012e52a75203234668a20c3"
+  },
+  {
+    "tool": "recruitment_salary",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 10
+    },
+    "invocation_id": "1793069187917765000",
+    "elapsed_seconds": 0.262,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 174070,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSeniority.max",
+        "value": 5
+      },
+      {
+        "path": "resultList[0].workingSeniority.min",
+        "value": 3
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "total",
+        "value": 174070
+      }
+    ],
+    "response_sha256": "f628d4a9ef0b4e78b52271a6c1497a60f9f5bb6ccf8bfadaf8a523c15ae26c86"
+  },
+  {
+    "tool": "recruitment_job_search",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "华为技术有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 10
+    },
+    "invocation_id": "1793069187917765000",
+    "elapsed_seconds": 0.228,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 10,
+    "reported_total": 174070,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSeniority.max",
+        "value": 5
+      },
+      {
+        "path": "resultList[0].workingSeniority.min",
+        "value": 3
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "total",
+        "value": 174070
+      }
+    ],
+    "response_sha256": "f628d4a9ef0b4e78b52271a6c1497a60f9f5bb6ccf8bfadaf8a523c15ae26c86"
+  }
+]

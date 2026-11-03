@@ -1,0 +1,167 @@
+{
+  "schema_version": 2,
+  "run_id": "live-replaced-20261027",
+  "review_scope": "仅筛选原已验收的正向案例；未重新调用或改写业务结论",
+  "cases": [
+    {
+      "id": "01-tech-hiring",
+      "verdict": "acceptable",
+      "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+      "checks": [
+        {
+          "expectation": "趋势、需求汇总、薪酬和岗位应分章节",
+          "status": "pass",
+          "evidence": "trend_overview、demand_stats、salary_records、job_records 为四个独立章节，当前分别含 5、6、10、10 项。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=华为技术有限公司，match_raw=华为技术有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=10,total=174070; recruitment_job_search:data,rows=10,total=174070]；metrics=[当前招聘人数=6258.0; 近三月招聘人数=6258.0; 近三月岗位数=5337; 平均更新频率=18409 秒; 平均薪酬=11,960 元/月; 在招岗位数=174070 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=8, demand_stats=6, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=1, city_dist=3, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "岗位样本数与招聘总量不得混用",
+          "status": "pass",
+          "evidence": "当前页职位样本 10 条；趋势视图当前招聘人数 6258、职位检索命中总数 174070 分列，核验结论明确两种口径不得互相替代。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=华为技术有限公司，match_raw=华为技术有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=10,total=174070; recruitment_job_search:data,rows=10,total=174070]；metrics=[当前招聘人数=6258.0; 近三月招聘人数=6258.0; 近三月岗位数=5337; 平均更新频率=18409 秒; 平均薪酬=11,960 元/月; 在招岗位数=174070 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=8, demand_stats=6, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=1, city_dist=3, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "薪酬单位和区间应可读",
+          "status": "pass",
+          "evidence": "平均薪酬为 11,960 元/月；可用样本区间示例 ['15K-30K']，缺失仍为“-”，未换算成零。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=华为技术有限公司，match_raw=华为技术有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=10,total=174070; recruitment_job_search:data,rows=10,total=174070]；metrics=[当前招聘人数=6258.0; 近三月招聘人数=6258.0; 近三月岗位数=5337; 平均更新频率=18409 秒; 平均薪酬=11,960 元/月; 在招岗位数=174070 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=8, demand_stats=6, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=1, city_dist=3, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "不得由招聘数直接推断实际员工增长",
+          "status": "pass",
+          "evidence": "insights 明确招聘数据仅反映数据源中的在招记录，实际人员净增长需结合离职、入职与组织调整判断。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=华为技术有限公司，match_raw=华为技术有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=10,total=174070; recruitment_job_search:data,rows=10,total=174070]；metrics=[当前招聘人数=6258.0; 近三月招聘人数=6258.0; 近三月岗位数=5337; 平均更新频率=18409 秒; 平均薪酬=11,960 元/月; 在招岗位数=174070 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=8, demand_stats=6, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=1, city_dist=3, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        }
+      ],
+      "issues": [],
+      "evidence_binding": {
+        "report.json": "43940e97155c6bfaaafd8819b5562d62e8676630955349f81d3816268764e256",
+        "report.html": "78adade8e84745295886e4493d5933c74b46f661c95d524f1dbcdd8b36c21712",
+        "report.md": "3dc4eb7e1beaf1d0af6393ceaf398a4dd0ba6d060767e630461c0e469588e9b5",
+        "calls.json": "8da7b50a4b13011f3b522309e31b790a7c2a83bb40962a55f3d4837afa355567",
+        "result.json": "153c441ede83398f95597d439670d5a01b3b5bc15fe62fe39dad61e52927ea87",
+        "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+      }
+    },
+    {
+      "id": "02-ev-job-details",
+      "verdict": "acceptable",
+      "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+      "checks": [
+        {
+          "expectation": "需求分析应使用岗位级 details 视图",
+          "status": "pass",
+          "evidence": "calls.json 中 recruitment_demand_analysis 使用 view=details；报告 demand_stats 保留岗位级业务/岗位关键词。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=比亚迪股份有限公司，match_raw=比亚迪股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=76920; recruitment_salary:data,rows=10,total=76920; recruitment_job_search:data,rows=10,total=76920]；metrics=[当前招聘人数=126960.0; 近三月招聘人数=126960.0; 近三月岗位数=15870; 平均更新频率=3334 秒; 平均薪酬=7,863 元/月; 在招岗位数=76920 个; 当前页样本城市数=8; 城市CR3=44.4%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=8, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "职位名称、城市和薪酬字段按源数据展示",
+          "status": "pass",
+          "evidence": "job_records 共 10 条，首条保留职位名称=底薪一万招募汽车销冠(比亚迪高端品牌)、城市=海口市、薪酬=10K-20K。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=比亚迪股份有限公司，match_raw=比亚迪股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=76920; recruitment_salary:data,rows=10,total=76920; recruitment_job_search:data,rows=10,total=76920]；metrics=[当前招聘人数=126960.0; 近三月招聘人数=126960.0; 近三月岗位数=15870; 平均更新频率=3334 秒; 平均薪酬=7,863 元/月; 在招岗位数=76920 个; 当前页样本城市数=8; 城市CR3=44.4%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=8, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "相同职位不得无依据合并",
+          "status": "pass",
+          "evidence": "job_records 按上游当前页逐条保留 10 条；重复名称仍是独立记录，没有本地聚合为一条。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=比亚迪股份有限公司，match_raw=比亚迪股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=76920; recruitment_salary:data,rows=10,total=76920; recruitment_job_search:data,rows=10,total=76920]；metrics=[当前招聘人数=126960.0; 近三月招聘人数=126960.0; 近三月岗位数=15870; 平均更新频率=3334 秒; 平均薪酬=7,863 元/月; 在招岗位数=76920 个; 当前页样本城市数=8; 城市CR3=44.4%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=8, trend_overview=5, consistency_check=3, salary_records=10, job_records=10]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        }
+      ],
+      "issues": [],
+      "evidence_binding": {
+        "report.json": "78b5a82872905819423eded54fa7ca2c1c72dd4060e547addcfec974aece60e6",
+        "report.html": "782b2177578a060684b21b226bc62c7df28478e946f00379d930740be8b27dc2",
+        "report.md": "3d714600427e5b0b69d4d0d75b776983628fc678d0da0a7ab681fa8eb8261616",
+        "calls.json": "1aede41caecd74fbdfed98c679b0944e00f3dfe49d67165e80c3a29ae432ecb7",
+        "result.json": "5623fa91e59a3fec54749e1fcf423c7f3c4915cb4f9eb14527752b305d6275a8",
+        "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+      }
+    },
+    {
+      "id": "04-platform-jobs",
+      "verdict": "acceptable",
+      "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+      "checks": [
+        {
+          "expectation": "企业全称必须直接用于查询，不做模糊补全",
+          "status": "pass",
+          "evidence": "subject 与全部 5 个调用均使用企业全称“北京京东世纪贸易有限公司”、keywordType=name，没有模糊补全。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "岗位与地域字段需保留原始语义",
+          "status": "pass",
+          "evidence": "job_records 直接保留职位名称与城市；首条为 健康管理产品运营 / 北京市，缺失使用“-”。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "报告不得将岗位样本扩写为战略定论",
+          "status": "pass",
+          "evidence": "报告把城市分布限定为当前页职位样本，并明确不得由岗位样本直接推导业务地域重心或战略。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        }
+      ],
+      "issues": [],
+      "evidence_binding": {
+        "report.json": "251e522a45da40ab49890962b3c0ae3795a13a33fba89c588b081b8ae67b7f38",
+        "report.html": "87e01b0a134b2d20bbfdfc3d9fbf7bdab5957ce988239c1d4778be4a22dc11b8",
+        "report.md": "ad337da1effacfe17e64e4d7cdf6388a7cf1409cf61f4bb92f18e401e6d24925",
+        "calls.json": "29923a369962947a86335889601193de4990686b3f516c2c56b49543097850b7",
+        "result.json": "8240275608ff061c69929fa9a754235c1b6c6ad568eae3693efa3fd642839469",
+        "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+      }
+    },
+    {
+      "id": "05-consumer-hiring",
+      "verdict": "acceptable",
+      "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+      "checks": [
+        {
+          "expectation": "雇主画像与岗位需求统计分开展示",
+          "status": "pass",
+          "evidence": "employer_profile 与 demand_stats 为独立章节；consistency_check 另列趋势统计和职位检索口径。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+        },
+        {
+          "expectation": "无岗位时应如实提示覆盖不足",
+          "status": "pass",
+          "evidence": "趋势视图为 0，但职位检索总量为 49 且当前页有 8 条；报告明确为口径冲突，没有宣称企业无招聘。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+        },
+        {
+          "expectation": "不得把招聘信息推断为经营业绩",
+          "status": "pass",
+          "evidence": "报告明确招聘数据不能直接推出经营业绩或扩张状态。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+        }
+      ],
+      "issues": [],
+      "evidence_binding": {
+        "report.json": "c072557d4e1bdae08520d8b5422cd1c93bf1b5968476b54dd1fdb614167a3a9b",
+        "report.html": "a02151f552bac81d95725c1dfbd35891ce42ec7cb4707ad50b6f38a3ad63a075",
+        "report.md": "d14f02e6169c5f2ca564135b3002430b8e8f865f6692aba044b830c8639b076e",
+        "calls.json": "b5f6f0f958383d04a8b7fd37d4912619c7c41a18bd607c42a112fe6b60f4f74c",
+        "result.json": "d0c7a118647564145acbeae4128b5891f6cafad4a0c3a79d2a277d0f48076069",
+        "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+      }
+    },
+    {
+      "id": "06-compact-jobs",
+      "verdict": "acceptable",
+      "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+      "checks": [
+        {
+          "expectation": "职位明细最多 5 条或实际返回数",
+          "status": "pass",
+          "evidence": "job_records 当前页 5 条，符合 pageSize=5。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "总量与 5 条样本明确区分",
+          "status": "pass",
+          "evidence": "职位检索命中总数 25686 与当前页 5 条分别披露。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        },
+        {
+          "expectation": "HTML、Markdown、JSON 的职位字段一致",
+          "status": "pass",
+          "evidence": "独立重渲染检查通过；JSON、HTML、Markdown 使用同一批职位名称、城市和薪酬字段。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=腾讯科技（深圳）有限公司，match_raw=腾讯科技（深圳）有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=25686; recruitment_salary:data,rows=5,total=25686; recruitment_job_search:data,rows=5,total=25686]；metrics=[当前招聘人数=549.0; 近三月招聘人数=549.0; 近三月岗位数=549; 平均更新频率=55709 秒; 平均薪酬=23,552 元/月; 在招岗位数=25686 个; 当前页样本城市数=1; 城市CR3=100.0%; 薪酬区间数=2]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=2, city_dist=1, trend_overview=5, consistency_check=3, salary_records=5, job_records=5]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+        }
+      ],
+      "issues": [],
+      "evidence_binding": {
+        "report.json": "c7bf07d5e43b9a031f065b1d6fc4a5e31dae9b847c34570d067a19de0c99d2c5",
+        "report.html": "cc8ebfce04c91bc3c475c17e7b71be802ea085910285de53534f243db52f55eb",
+        "report.md": "122880dbd3c4f953630de41542cfde632fa778b2888b7245961875cca9d990b1",
+        "calls.json": "8cc47cb922d9f11c1e2958f470a25dba377ef3fa47410edc96ec6217e690ff73",
+        "result.json": "520964f75d368bce38d81cf22fb685162b9248c2ad16f3902dbf0796ba46407c",
+        "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+      }
+    }
+  ]
+}

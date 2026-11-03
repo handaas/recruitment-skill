@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "skill": "recruitment-skill",
+  "case_id": "04-platform-jobs",
+  "title": "平台企业岗位抽样",
+  "invocation_id": "1793069191395842000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "f69448c6955d14e58dde9fd7e393c20535bfc67116c96c875b052e8b748d4b77",
+    "skill_source_hashes": {
+      "scripts/common.py": "0ae21e23d71fcdea83059e5a5d3df9bacba0f1ff29d7cdb7a73ad7c8e19821bb",
+      "scripts/compose_report.py": "64750865043f8548b0e178446d4291326c64eac17bdd7f1a190ec3438ab1b2ff",
+      "scripts/mcp_client.py": "e80cf2fb01287d9ec4d619cddbd963d27d41b2849d7685f6e0b6c64f7fe59ca9",
+      "scripts/render_report.py": "d3c8cdbbd5e3f9477ea0a655300d9556186210ef2c7564d563b05a6fa7188511",
+      "scripts/validate_config.py": "2ee98170284c16f3bbe2f73ad6c1b726470d6de11fc3e2ddc97d812f2a31b904"
+    },
+    "upstream_source_hashes": {
+      "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    },
+    "upstream_dependency_hashes": {
+      "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T10:46:31+08:00",
+  "elapsed_seconds": 3.958,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 recruitment-skill/scripts/compose_report.py --enterprise '北京京东世纪贸易有限公司' --view details --page-size 8 --output recruitment-skill/output/live-replaced-20261027/04-platform-jobs/report.json --report-output recruitment-skill/output/live-replaced-20261027/04-platform-jobs/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 5,
+  "successful_data_calls": 5,
+  "empty_calls": 0,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 91,
+    "subject": {
+      "enterprise": "北京京东世纪贸易有限公司",
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name",
+      "match_raw": "北京京东世纪贸易有限公司",
+      "resolved": true,
+      "resolve_reason": "用户提供企业全称"
+    },
+    "title": "北京京东世纪贸易有限公司 招聘大数据报告",
+    "data_mode": null,
+    "metrics": [
+      {
+        "label": "当前招聘人数",
+        "value": "9740.0",
+        "hint": "当前在招岗位人数"
+      },
+      {
+        "label": "近三月招聘人数",
+        "value": "9740.0",
+        "hint": "近三个月招聘人数",
+        "delta": "为当前的 1.0x"
+      },
+      {
+        "label": "近三月岗位数",
+        "value": "9016",
+        "hint": "近三月发布岗位数"
+      },
+      {
+        "label": "平均更新频率",
+        "value": "4858 秒",
+        "hint": "岗位平均更新频率（上游单位：秒）"
+      },
+      {
+        "label": "平均薪酬",
+        "value": "12,356 元/月",
+        "hint": "在招岗位平均薪酬（元/月）"
+      },
+      {
+        "label": "在招岗位数",
+        "value": "130797 个",
+        "hint": "本次职位检索命中条数"
+      },
+      {
+        "label": "当前页样本城市数",
+        "value": "3",
+        "hint": "本次返回明细样本覆盖的去重城市数，并非全部岗位城市总数"
+      },
+      {
+        "label": "城市CR3",
+        "value": "100.0%",
+        "hint": "前3大城市岗位集中度"
+      },
+      {
+        "label": "薪酬区间数",
+        "value": "3",
+        "hint": "薪酬分布区间数"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 11,
+      "populated_sections": 10,
+      "empty_sections": 1,
+      "coverage_pct": 91
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 5,
+      "offline_scripts": true,
+      "independent_rerender": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "0ae21e23d71fcdea83059e5a5d3df9bacba0f1ff29d7cdb7a73ad7c8e19821bb",
+    "scripts/compose_report.py": "64750865043f8548b0e178446d4291326c64eac17bdd7f1a190ec3438ab1b2ff",
+    "scripts/mcp_client.py": "e80cf2fb01287d9ec4d619cddbd963d27d41b2849d7685f6e0b6c64f7fe59ca9",
+    "scripts/render_report.py": "d3c8cdbbd5e3f9477ea0a655300d9556186210ef2c7564d563b05a6fa7188511",
+    "scripts/validate_config.py": "2ee98170284c16f3bbe2f73ad6c1b726470d6de11fc3e2ddc97d812f2a31b904"
+  }
+}

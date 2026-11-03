@@ -1,0 +1,415 @@
+[
+  {
+    "tool": "recruitment_trend",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069191395842000",
+    "elapsed_seconds": 0.868,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingCurrentCount",
+        "value": 9740.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 9740.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 9016
+      },
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 4858
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 12355.8656537183
+      }
+    ],
+    "response_sha256": "35b5f547ce68fc14b6988ea9dfc0e006c3a1dcb32fb4555b48f433ae2d15ae17"
+  },
+  {
+    "tool": "recruitment_employer_profile",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name"
+    },
+    "invocation_id": "1793069191395842000",
+    "elapsed_seconds": 0.684,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "benefitList",
+      "businessTags",
+      "recruitingAvgUpdate",
+      "recruitingAvgWorkingSalary",
+      "recruitingBusinessKeyWords",
+      "recruitingCities",
+      "recruitingCurrentCount",
+      "recruitingLastThreeMonthCount",
+      "recruitingLastThreeMonthNo",
+      "recruitingPositionKeyWords",
+      "recruitingTypes",
+      "truncatedFields"
+    ],
+    "row_count": null,
+    "reported_total": null,
+    "numeric_evidence": [
+      {
+        "path": "recruitingAvgUpdate",
+        "value": 4858
+      },
+      {
+        "path": "recruitingAvgWorkingSalary",
+        "value": 12355.8656537183
+      },
+      {
+        "path": "recruitingCurrentCount",
+        "value": 9740.0
+      },
+      {
+        "path": "recruitingLastThreeMonthCount",
+        "value": 9740.0
+      },
+      {
+        "path": "recruitingLastThreeMonthNo",
+        "value": 9016
+      },
+      {
+        "path": "truncatedFields.businessTags.total",
+        "value": 74
+      },
+      {
+        "path": "truncatedFields.businessTags.returned",
+        "value": 50
+      },
+      {
+        "path": "truncatedFields.recruitingCities.total",
+        "value": 441
+      },
+      {
+        "path": "truncatedFields.recruitingCities.returned",
+        "value": 50
+      }
+    ],
+    "response_sha256": "12ccfba34d33f5cfa8b8eabed0083a941414e5653ed2164a0a94c472ab635537"
+  },
+  {
+    "tool": "recruitment_demand_analysis",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name",
+      "view": "details",
+      "listLimit": 50
+    },
+    "invocation_id": "1793069191395842000",
+    "elapsed_seconds": 0.971,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 50,
+    "reported_total": 130797,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSalary.max",
+        "value": 45000.0
+      },
+      {
+        "path": "resultList[0].workingSalary.min",
+        "value": 18000.0
+      },
+      {
+        "path": "resultList[0].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[1].workingSalary.max",
+        "value": 55000.0
+      },
+      {
+        "path": "resultList[1].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 10
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[2].workingSalary.max",
+        "value": 8000.0
+      },
+      {
+        "path": "resultList[2].workingSalary.min",
+        "value": 7000.0
+      },
+      {
+        "path": "resultList[2].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSalary.max",
+        "value": 35000.0
+      },
+      {
+        "path": "resultList[3].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[3].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[4].workingSalary.max",
+        "value": 40000.0
+      },
+      {
+        "path": "resultList[4].workingSalary.min",
+        "value": 20000.0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 4
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 2
+      },
+      {
+        "path": "total",
+        "value": 130797
+      }
+    ],
+    "response_sha256": "0b5e55cc8e4afe93f836459b8bbe61f807887b3a82228c18c80e0de6dbb05a30"
+  },
+  {
+    "tool": "recruitment_salary",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 8
+    },
+    "invocation_id": "1793069191395842000",
+    "elapsed_seconds": 0.639,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 8,
+    "reported_total": 130797,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSalary.max",
+        "value": 45000.0
+      },
+      {
+        "path": "resultList[0].workingSalary.min",
+        "value": 18000.0
+      },
+      {
+        "path": "resultList[0].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[1].workingSalary.max",
+        "value": 55000.0
+      },
+      {
+        "path": "resultList[1].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 10
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[2].workingSalary.max",
+        "value": 8000.0
+      },
+      {
+        "path": "resultList[2].workingSalary.min",
+        "value": 7000.0
+      },
+      {
+        "path": "resultList[2].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSalary.max",
+        "value": 35000.0
+      },
+      {
+        "path": "resultList[3].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[3].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[4].workingSalary.max",
+        "value": 40000.0
+      },
+      {
+        "path": "resultList[4].workingSalary.min",
+        "value": 20000.0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 4
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 2
+      },
+      {
+        "path": "total",
+        "value": 130797
+      }
+    ],
+    "response_sha256": "440142cab49bee84aaa7482150436b53f49bd2aa18f14db768284208f8a42334"
+  },
+  {
+    "tool": "recruitment_job_search",
+    "domain": null,
+    "arguments": {
+      "matchKeyword": "北京京东世纪贸易有限公司",
+      "keywordType": "name",
+      "pageIndex": 1,
+      "pageSize": 8
+    },
+    "invocation_id": "1793069191395842000",
+    "elapsed_seconds": 0.707,
+    "status": "data",
+    "error_category": null,
+    "result_type": "dict",
+    "top_level_fields": [
+      "resultList",
+      "total"
+    ],
+    "row_count": 8,
+    "reported_total": 130797,
+    "numeric_evidence": [
+      {
+        "path": "resultList[0].workingSalary.max",
+        "value": 45000.0
+      },
+      {
+        "path": "resultList[0].workingSalary.min",
+        "value": 18000.0
+      },
+      {
+        "path": "resultList[0].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[1].workingSalary.max",
+        "value": 55000.0
+      },
+      {
+        "path": "resultList[1].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[1].workingSeniority.max",
+        "value": 10
+      },
+      {
+        "path": "resultList[1].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[2].workingSalary.max",
+        "value": 8000.0
+      },
+      {
+        "path": "resultList[2].workingSalary.min",
+        "value": 7000.0
+      },
+      {
+        "path": "resultList[2].workingSeniority.max",
+        "value": 0
+      },
+      {
+        "path": "resultList[2].workingSeniority.min",
+        "value": 0
+      },
+      {
+        "path": "resultList[3].workingSalary.max",
+        "value": 35000.0
+      },
+      {
+        "path": "resultList[3].workingSalary.min",
+        "value": 25000.0
+      },
+      {
+        "path": "resultList[3].workingSeniority.min",
+        "value": 5
+      },
+      {
+        "path": "resultList[4].workingSalary.max",
+        "value": 40000.0
+      },
+      {
+        "path": "resultList[4].workingSalary.min",
+        "value": 20000.0
+      },
+      {
+        "path": "resultList[4].workingSeniority.max",
+        "value": 4
+      },
+      {
+        "path": "resultList[4].workingSeniority.min",
+        "value": 2
+      },
+      {
+        "path": "total",
+        "value": 130797
+      }
+    ],
+    "response_sha256": "440142cab49bee84aaa7482150436b53f49bd2aa18f14db768284208f8a42334"
+  }
+]

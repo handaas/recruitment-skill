@@ -1,0 +1,40 @@
+{
+  "metric_overflows": [],
+  "document_title": "华为技术有限公司 招聘大数据报告",
+  "title_matches": true,
+  "charts": 2,
+  "rendered_charts": 2,
+  "zero_size_charts": 0,
+  "chart_details": [
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 19
+    },
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 25
+    }
+  ],
+  "page_width": 1905,
+  "viewport_width": 1920,
+  "empty_headers": 0,
+  "script_errors": [],
+  "external_resources": 0,
+  "external_asset_references": 0,
+  "ok": true,
+  "report_html_sha256": "78adade8e84745295886e4493d5933c74b46f661c95d524f1dbcdd8b36c21712",
+  "report_json_sha256": "43940e97155c6bfaaafd8819b5562d62e8676630955349f81d3816268764e256",
+  "screenshot": "browser.png",
+  "skill": "recruitment-skill",
+  "id": "01-tech-hiring",
+  "browser": "Ego Lite",
+  "space_id": 4,
+  "offline": true,
+  "checked_at": "2026-10-27T03:04:03.548Z"
+}

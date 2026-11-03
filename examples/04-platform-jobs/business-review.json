@@ -1,0 +1,31 @@
+{
+  "id": "04-platform-jobs",
+  "verdict": "acceptable",
+  "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+  "checks": [
+    {
+      "expectation": "企业全称必须直接用于查询，不做模糊补全",
+      "status": "pass",
+      "evidence": "subject 与全部 5 个调用均使用企业全称“北京京东世纪贸易有限公司”、keywordType=name，没有模糊补全。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    },
+    {
+      "expectation": "岗位与地域字段需保留原始语义",
+      "status": "pass",
+      "evidence": "job_records 直接保留职位名称与城市；首条为 健康管理产品运营 / 北京市，缺失使用“-”。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    },
+    {
+      "expectation": "报告不得将岗位样本扩写为战略定论",
+      "status": "pass",
+      "evidence": "报告把城市分布限定为当前页职位样本，并明确不得由岗位样本直接推导业务地域重心或战略。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=北京京东世纪贸易有限公司，match_raw=北京京东世纪贸易有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=50,total=130797; recruitment_salary:data,rows=8,total=130797; recruitment_job_search:data,rows=8,total=130797]；metrics=[当前招聘人数=9740.0; 近三月招聘人数=9740.0; 近三月岗位数=9016; 平均更新频率=4858 秒; 平均薪酬=12,356 元/月; 在招岗位数=130797 个; 当前页样本城市数=3; 城市CR3=100.0%; 薪酬区间数=3]；sections=[employer_profile=8, demand_stats=2, benefit_tags=20, position_keywords=3, source_dist=0, salary_dist=3, city_dist=3, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":10,\"empty_sections\":1,\"coverage_pct\":91}。"
+    }
+  ],
+  "issues": [],
+  "evidence_binding": {
+    "report.json": "251e522a45da40ab49890962b3c0ae3795a13a33fba89c588b081b8ae67b7f38",
+    "report.html": "87e01b0a134b2d20bbfdfc3d9fbf7bdab5957ce988239c1d4778be4a22dc11b8",
+    "report.md": "ad337da1effacfe17e64e4d7cdf6388a7cf1409cf61f4bb92f18e401e6d24925",
+    "calls.json": "29923a369962947a86335889601193de4990686b3f516c2c56b49543097850b7",
+    "result.json": "8240275608ff061c69929fa9a754235c1b6c6ad568eae3693efa3fd642839469",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  }
+}

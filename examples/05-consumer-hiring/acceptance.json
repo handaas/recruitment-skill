@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "skill": "recruitment-skill",
+  "case_id": "05-consumer-hiring",
+  "title": "消费品牌招聘画像",
+  "invocation_id": "1793069191908905000",
+  "provenance": {
+    "integrator_id": "683e574805537ace146cc05e",
+    "runner_sha256": "05777c2f2b0791cb5157aef691206606dade8df7af3b17212285b7ae74632a66",
+    "credential_policy_sha256": "bcabf08a1ca92f28357c0e57a8bae9bfa910eb1d4b204d8195ee3b7a77106eed",
+    "scenario_sha256": "f2c3b9f3d3329c92385936af07d5e5ed6d96fe4f2d404476fde498bf505ec911",
+    "skill_source_hashes": {
+      "scripts/common.py": "0ae21e23d71fcdea83059e5a5d3df9bacba0f1ff29d7cdb7a73ad7c8e19821bb",
+      "scripts/compose_report.py": "64750865043f8548b0e178446d4291326c64eac17bdd7f1a190ec3438ab1b2ff",
+      "scripts/mcp_client.py": "e80cf2fb01287d9ec4d619cddbd963d27d41b2849d7685f6e0b6c64f7fe59ca9",
+      "scripts/render_report.py": "d3c8cdbbd5e3f9477ea0a655300d9556186210ef2c7564d563b05a6fa7188511",
+      "scripts/validate_config.py": "2ee98170284c16f3bbe2f73ad6c1b726470d6de11fc3e2ddc97d812f2a31b904"
+    },
+    "upstream_source_hashes": {
+      "recruitment-mcp-server": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    },
+    "upstream_dependency_hashes": {
+      "recruitment-mcp-server/server/mcp_server.py": "3f299f6fb326d3a9bfb97e6b2a36091fe064e04bc3d68dfcd388f12a4f2826a6"
+    }
+  },
+  "source_changed_during_run": false,
+  "started_at": "2026-10-27T10:46:31+08:00",
+  "elapsed_seconds": 3.897,
+  "returncode": 0,
+  "exception_type": null,
+  "command": "python3 recruitment-skill/scripts/compose_report.py --enterprise '贵州茅台酒股份有限公司' --view statistics --page-size 8 --output recruitment-skill/output/live-replaced-20261027/05-consumer-hiring/report.json --report-output recruitment-skill/output/live-replaced-20261027/05-consumer-hiring/report.html",
+  "transport": "local MCP servers via loopback streamable-http",
+  "cache_used": false,
+  "call_count": 5,
+  "successful_data_calls": 5,
+  "empty_calls": 0,
+  "failed_calls": 0,
+  "checks": {
+    "issues": [],
+    "warnings": [],
+    "coverage_pct": 82,
+    "subject": {
+      "enterprise": "贵州茅台酒股份有限公司",
+      "matchKeyword": "贵州茅台酒股份有限公司",
+      "keywordType": "name",
+      "match_raw": "贵州茅台酒股份有限公司",
+      "resolved": true,
+      "resolve_reason": "用户提供企业全称"
+    },
+    "title": "贵州茅台酒股份有限公司 招聘大数据报告",
+    "data_mode": null,
+    "metrics": [
+      {
+        "label": "当前招聘人数",
+        "value": "0",
+        "hint": "当前在招岗位人数"
+      },
+      {
+        "label": "近三月招聘人数",
+        "value": "0",
+        "hint": "近三个月招聘人数"
+      },
+      {
+        "label": "近三月岗位数",
+        "value": "0",
+        "hint": "近三月发布岗位数"
+      },
+      {
+        "label": "平均更新频率",
+        "value": "0 秒",
+        "hint": "岗位平均更新频率（上游单位：秒）"
+      },
+      {
+        "label": "平均薪酬",
+        "value": "12,315 元/月",
+        "hint": "在招岗位平均薪酬（元/月）"
+      },
+      {
+        "label": "在招岗位数",
+        "value": "49 个",
+        "hint": "本次职位检索命中条数"
+      },
+      {
+        "label": "当前页样本城市数",
+        "value": "2",
+        "hint": "本次返回明细样本覆盖的去重城市数，并非全部岗位城市总数"
+      },
+      {
+        "label": "城市CR3",
+        "value": "100.0%",
+        "hint": "前3大城市岗位集中度"
+      },
+      {
+        "label": "薪酬区间数",
+        "value": "1",
+        "hint": "薪酬分布区间数"
+      }
+    ],
+    "quality_report": {
+      "total_sections": 11,
+      "populated_sections": 9,
+      "empty_sections": 2,
+      "coverage_pct": 82
+    },
+    "unregistered_tools": [],
+    "checks": {
+      "json_html_markdown": true,
+      "explicit_live": true,
+      "tool_calls_recorded": 5,
+      "offline_scripts": true,
+      "independent_rerender": true,
+      "offline_browser": true
+    }
+  },
+  "status": "passed",
+  "source_hashes": {
+    "scripts/common.py": "0ae21e23d71fcdea83059e5a5d3df9bacba0f1ff29d7cdb7a73ad7c8e19821bb",
+    "scripts/compose_report.py": "64750865043f8548b0e178446d4291326c64eac17bdd7f1a190ec3438ab1b2ff",
+    "scripts/mcp_client.py": "e80cf2fb01287d9ec4d619cddbd963d27d41b2849d7685f6e0b6c64f7fe59ca9",
+    "scripts/render_report.py": "d3c8cdbbd5e3f9477ea0a655300d9556186210ef2c7564d563b05a6fa7188511",
+    "scripts/validate_config.py": "2ee98170284c16f3bbe2f73ad6c1b726470d6de11fc3e2ddc97d812f2a31b904"
+  },
+  "technical_status": "passed",
+  "audited_at": "2026-10-27T11:13:03+08:00",
+  "evidence_binding": {
+    "report.json": "c072557d4e1bdae08520d8b5422cd1c93bf1b5968476b54dd1fdb614167a3a9b",
+    "report.html": "a02151f552bac81d95725c1dfbd35891ce42ec7cb4707ad50b6f38a3ad63a075",
+    "report.md": "d14f02e6169c5f2ca564135b3002430b8e8f865f6692aba044b830c8639b076e",
+    "calls.json": "b5f6f0f958383d04a8b7fd37d4912619c7c41a18bd607c42a112fe6b60f4f74c",
+    "result.json": "d0c7a118647564145acbeae4128b5891f6cafad4a0c3a79d2a277d0f48076069",
+    "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+  },
+  "business_review": {
+    "id": "05-consumer-hiring",
+    "verdict": "acceptable",
+    "summary": "本轮正式真实产物已逐项复核；结论限于上游公开数据、本次分页样本及报告声明口径。",
+    "checks": [
+      {
+        "expectation": "雇主画像与岗位需求统计分开展示",
+        "status": "pass",
+        "evidence": "employer_profile 与 demand_stats 为独立章节；consistency_check 另列趋势统计和职位检索口径。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+      },
+      {
+        "expectation": "无岗位时应如实提示覆盖不足",
+        "status": "pass",
+        "evidence": "趋势视图为 0，但职位检索总量为 49 且当前页有 8 条；报告明确为口径冲突，没有宣称企业无招聘。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+      },
+      {
+        "expectation": "不得把招聘信息推断为经营业绩",
+        "status": "pass",
+        "evidence": "报告明确招聘数据不能直接推出经营业绩或扩张状态。 本轮实际产物：technical_status=passed，successful_data_calls=5，subject.enterprise=贵州茅台酒股份有限公司，match_raw=贵州茅台酒股份有限公司，resolved=True；calls=[recruitment_trend:data,rows=None,total=None; recruitment_employer_profile:data,rows=None,total=None; recruitment_demand_analysis:data,rows=None,total=None; recruitment_salary:data,rows=8,total=49; recruitment_job_search:data,rows=8,total=49]；metrics=[当前招聘人数=0; 近三月招聘人数=0; 近三月岗位数=0; 平均更新频率=0 秒; 平均薪酬=12,315 元/月; 在招岗位数=49 个; 当前页样本城市数=2; 城市CR3=100.0%; 薪酬区间数=1]；sections=[employer_profile=7, demand_stats=6, benefit_tags=0, position_keywords=3, source_dist=0, salary_dist=1, city_dist=2, trend_overview=5, consistency_check=3, salary_records=8, job_records=8]；quality_report={\"total_sections\":11,\"populated_sections\":9,\"empty_sections\":2,\"coverage_pct\":82}。"
+      }
+    ],
+    "issues": [],
+    "evidence_binding": {
+      "report.json": "c072557d4e1bdae08520d8b5422cd1c93bf1b5968476b54dd1fdb614167a3a9b",
+      "report.html": "a02151f552bac81d95725c1dfbd35891ce42ec7cb4707ad50b6f38a3ad63a075",
+      "report.md": "d14f02e6169c5f2ca564135b3002430b8e8f865f6692aba044b830c8639b076e",
+      "calls.json": "b5f6f0f958383d04a8b7fd37d4912619c7c41a18bd607c42a112fe6b60f4f74c",
+      "result.json": "d0c7a118647564145acbeae4128b5891f6cafad4a0c3a79d2a277d0f48076069",
+      "source_manifest_sha256": "014e0c39ccd221d4b037bfafc75dc705b73521da54c003be18fa8ca62d4dab92"
+    }
+  }
+}

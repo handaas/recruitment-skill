@@ -1,0 +1,39 @@
+{
+  "metric_overflows": [],
+  "document_title": "北京京东世纪贸易有限公司 招聘大数据报告",
+  "title_matches": true,
+  "charts": 2,
+  "rendered_charts": 2,
+  "zero_size_charts": 0,
+  "chart_details": [
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 29
+    },
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 29
+    }
+  ],
+  "page_width": 1905,
+  "viewport_width": 1920,
+  "empty_headers": 0,
+  "script_errors": [],
+  "external_resources": 0,
+  "external_asset_references": 0,
+  "ok": true,
+  "report_html_sha256": "87e01b0a134b2d20bbfdfc3d9fbf7bdab5957ce988239c1d4778be4a22dc11b8",
+  "report_json_sha256": "251e522a45da40ab49890962b3c0ae3795a13a33fba89c588b081b8ae67b7f38",
+  "skill": "recruitment-skill",
+  "id": "04-platform-jobs",
+  "browser": "Ego Lite",
+  "space_id": 4,
+  "offline": true,
+  "checked_at": "2026-10-27T03:04:07.069Z"
+}

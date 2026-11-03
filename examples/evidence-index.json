@@ -1,0 +1,95 @@
+{
+  "run_id": "live-replaced-20261027",
+  "cases": [
+    {
+      "skill": "recruitment-skill",
+      "id": "01-tech-hiring",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "43940e97155c6bfaaafd8819b5562d62e8676630955349f81d3816268764e256",
+        "report.html": "78adade8e84745295886e4493d5933c74b46f661c95d524f1dbcdd8b36c21712",
+        "report.md": "3dc4eb7e1beaf1d0af6393ceaf398a4dd0ba6d060767e630461c0e469588e9b5",
+        "calls.json": "8da7b50a4b13011f3b522309e31b790a7c2a83bb40962a55f3d4837afa355567",
+        "result.json": "153c441ede83398f95597d439670d5a01b3b5bc15fe62fe39dad61e52927ea87",
+        "audit.json": "7e9cad858004daa6ece71faab98ee6e2c90b7cab311a3e7aebd9488fd919702a",
+        "acceptance.json": "fc4c2db033cb6f180df2d620783afa7c6275d86121d5467545c3521aa3c3ffde",
+        "business-review.json": "8f77ddba5ce6430a1cca109f3be0de2dd14392810c8834a540ae2eb1478882d6",
+        "browser-check.json": "63c8721bc98d2db7404c3f04191e5e410d6f80281c318c0ac79f284d67d366d8"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/01-tech-hiring.md"
+    },
+    {
+      "skill": "recruitment-skill",
+      "id": "02-ev-job-details",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "78b5a82872905819423eded54fa7ca2c1c72dd4060e547addcfec974aece60e6",
+        "report.html": "782b2177578a060684b21b226bc62c7df28478e946f00379d930740be8b27dc2",
+        "report.md": "3d714600427e5b0b69d4d0d75b776983628fc678d0da0a7ab681fa8eb8261616",
+        "calls.json": "1aede41caecd74fbdfed98c679b0944e00f3dfe49d67165e80c3a29ae432ecb7",
+        "result.json": "5623fa91e59a3fec54749e1fcf423c7f3c4915cb4f9eb14527752b305d6275a8",
+        "audit.json": "b836fd62eea8258ab119d1d846da9b6dd8148358a6e5076dd07b32a1bcaf8a5c",
+        "acceptance.json": "31847966151f04a06fbe2856c040e4b8e1b31826efcca4aca2d6b78e424b7714",
+        "business-review.json": "a3d9bcd349c9e684fab75be2442ffec96f2d8a8fb6cd4638dfbba76aaec74aa3",
+        "browser-check.json": "dea5d2def0769b6ea69d4b3eea302e1bb5e29f296083726ff931d08ec3741fa5"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/02-ev-job-details.md"
+    },
+    {
+      "skill": "recruitment-skill",
+      "id": "04-platform-jobs",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "251e522a45da40ab49890962b3c0ae3795a13a33fba89c588b081b8ae67b7f38",
+        "report.html": "87e01b0a134b2d20bbfdfc3d9fbf7bdab5957ce988239c1d4778be4a22dc11b8",
+        "report.md": "ad337da1effacfe17e64e4d7cdf6388a7cf1409cf61f4bb92f18e401e6d24925",
+        "calls.json": "29923a369962947a86335889601193de4990686b3f516c2c56b49543097850b7",
+        "result.json": "8240275608ff061c69929fa9a754235c1b6c6ad568eae3693efa3fd642839469",
+        "audit.json": "e920157df08d95fd810a6af54ea7d2da1f5f62e630b1ff10099102870fbb0440",
+        "acceptance.json": "acaebb3eca5c4caf061179a3602289b3271f42e02f279b3a5219823a2c790b83",
+        "business-review.json": "968a1f797638be428ef12e9b0db4feaf6b8f315743e3bae3435d39bf797ce821",
+        "browser-check.json": "7f31b1adf0ef92b763b77af356d5f4c9a5ec709f047fd5f34d607ff20ecf5d2c"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/04-platform-jobs.md"
+    },
+    {
+      "skill": "recruitment-skill",
+      "id": "05-consumer-hiring",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "c072557d4e1bdae08520d8b5422cd1c93bf1b5968476b54dd1fdb614167a3a9b",
+        "report.html": "a02151f552bac81d95725c1dfbd35891ce42ec7cb4707ad50b6f38a3ad63a075",
+        "report.md": "d14f02e6169c5f2ca564135b3002430b8e8f865f6692aba044b830c8639b076e",
+        "calls.json": "b5f6f0f958383d04a8b7fd37d4912619c7c41a18bd607c42a112fe6b60f4f74c",
+        "result.json": "d0c7a118647564145acbeae4128b5891f6cafad4a0c3a79d2a277d0f48076069",
+        "audit.json": "75ccc35a95ea4953316a18b850b64ac47f21798f9b64b5eaa8fde7a78e4dfc47",
+        "acceptance.json": "d4b00b02b9f3837c26461df0850fceb985a92242cddc4f75fa58f802b83ba9c2",
+        "business-review.json": "71437cdee91012158624c83ceea427afe11b71ebd2dae3bdda75b65b1a45867a",
+        "browser-check.json": "7febdc3e1e6fb6de41a2f4611da1d2f2f3f7563e95a3c13babf13ab53164aa7c"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/05-consumer-hiring.md"
+    },
+    {
+      "skill": "recruitment-skill",
+      "id": "06-compact-jobs",
+      "status": "passed",
+      "positive_business_pass": true,
+      "files_sha256": {
+        "report.json": "c7bf07d5e43b9a031f065b1d6fc4a5e31dae9b847c34570d067a19de0c99d2c5",
+        "report.html": "cc8ebfce04c91bc3c475c17e7b71be802ea085910285de53534f243db52f55eb",
+        "report.md": "122880dbd3c4f953630de41542cfde632fa778b2888b7245961875cca9d990b1",
+        "calls.json": "8cc47cb922d9f11c1e2958f470a25dba377ef3fa47410edc96ec6217e690ff73",
+        "result.json": "520964f75d368bce38d81cf22fb685162b9248c2ad16f3902dbf0796ba46407c",
+        "audit.json": "0fd89e6ec24b5b971fb62e5b6b5ef46836784d8cab39c04ebdde451d579c99c7",
+        "acceptance.json": "bc422f3d7f0e97a76cb9df02f16dfb4fd7a28cc64eefcb7b437057b5d0666e4a",
+        "business-review.json": "a1205f728a3822c61dd7a9fc809c06c0e5e29dd1de05e08b650ebc6a0ab21c48",
+        "browser-check.json": "93f9fccdeeebfcc11f96df9a8ecdfdded08e07bfc06157ebea15745809874f50"
+      },
+      "audit_record": "../../test-records/live-replaced-20261027/06-compact-jobs.md"
+    }
+  ]
+}

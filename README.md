@@ -329,13 +329,13 @@ python scripts/render_report.py \
 
 ### 历史真实验收快照
 
-`examples/live-replaced-20261027/` 是旧版综合报告的历史真实验收快照，可用于查看视觉样式和文件格式。它早于当前问题路由优化，**不能作为当前按问题选产品、章节或本地筛选逻辑的验证证据**。
+`examples/` 保留旧版综合报告的历史真实验收快照，可用于查看视觉样式和文件格式。它早于当前问题路由优化，**不能作为当前按问题选产品、章节或本地筛选逻辑的验证证据**。
 
 | 文件 | 链接 |
 | --- | --- |
-| 历史 HTML 报告 | [查看](examples/live-replaced-20261027/reports/01-tech-hiring/report.html) |
-| 历史 Markdown 报告 | [查看](examples/live-replaced-20261027/reports/01-tech-hiring/report.md) |
-| 历史 JSON 报告 | [查看](examples/live-replaced-20261027/reports/01-tech-hiring/report.json) |
+| 历史 HTML 报告 | [查看](examples/01-tech-hiring/report.html) |
+| 历史 Markdown 报告 | [查看](examples/01-tech-hiring/report.md) |
+| 历史 JSON 报告 | [查看](examples/01-tech-hiring/report.json) |
 
 ## 故障排查
 

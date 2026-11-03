@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" href="data:," />
-  <title>比亚迪股份有限公司 招聘大数据报告</title>
+  <title>腾讯科技（深圳）有限公司 招聘大数据报告</title>
   <style>
     :root { --bg:#eef1f5; --card:#ffffff; --text:#1f2937; --muted:#64748b; --line:#d8dee8; --blue:#003b71; --deep:#003b71; --red:#7f1d1d; --gold:#d97706; --stripe:#666; }
     * { box-sizing:border-box; letter-spacing:0 !important; }
@@ -145,6 +145,7 @@
     .chart-box-gauge { max-width:380px; }
     .chart-title { margin:0 0 8px; color:#0b3768; font-size:15px; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
     .chart-canvas { width:100%; height:300px; }
+    .chart-canvas[data-chart-state="waiting"],.chart-canvas[data-chart-state="error"] { display:flex; align-items:center; justify-content:center; color:#64748b; font-size:13px; text-align:center; }
     .chart-box-gauge .chart-canvas { height:240px; }
     .chart-data { margin-top:10px; }
     .chart-data summary { cursor:pointer; color:#0b5ca8; font-size:12px; font-weight:700; padding:4px 0; }
@@ -212,16 +213,70 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
 </script>
   <script>
 (function(){
-  window.__echarts_instances=[];
+  if(window.__handaas_boot_charts){window.__handaas_boot_charts();return;}
+  window.__echarts_instances=window.__echarts_instances||[];
+  var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
+  var timer=null, retries=0, MAX_RETRIES=100;
+  var layoutRetries=0, MAX_LAYOUT_RETRIES=50;
+  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
+  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  function summarize(nodes){
+    status.total=nodes.length;status.ready=0;status.failed=0;
+    nodes.forEach(function(el){
+      if(el.getAttribute('data-chart-state')==='ready'){status.ready++;}
+      else if(el.getAttribute('data-chart-state')==='error'){status.failed++;}
+    });
+    status.state=status.ready===status.total?'ready':
+      (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
+  }
+  function raf(fn){if(window.requestAnimationFrame){window.requestAnimationFrame(fn);}else{fn();}}
   function boot(){
-    if(typeof echarts==='undefined'){return;}
-    var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-    var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
-    document.querySelectorAll('.chart-canvas').forEach(function(el){
-      var raw=el.getAttribute('data-spec'); if(!raw){return;}
-      var spec; try{spec=JSON.parse(raw.replace(/&quot;/g,'"').replace(/&amp;/g,'&'));}catch(e){return;}
-      var chart=echarts.init(el,null,{renderer:'svg'});
-      window.__echarts_instances.push(chart);
+    if(document.readyState==='loading'){return;}
+    var nodes=document.querySelectorAll('.chart-canvas');
+    if(!nodes.length){summarize(nodes);return;}
+    if(!window.echarts || typeof window.echarts.init!=='function'){
+      var exhausted=retries>=MAX_RETRIES;
+      nodes.forEach(function(el){
+        if(el.__handaas_chart_ready){return;}
+        el.__handaas_dependency_error=true;
+        el.setAttribute('data-chart-state',exhausted?'error':'waiting');
+        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+      });
+      summarize(nodes);
+      if(!exhausted && timer===null){
+        retries++;
+        timer=setTimeout(function(){timer=null;boot();},100);
+      }
+      return;
+    }
+    if(timer!==null){clearTimeout(timer);timer=null;}
+    var pendingLayout=0;
+    nodes.forEach(function(el){
+      if(el.__handaas_chart_ready){return;}
+      if(el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error){return;}
+      if(window.ResizeObserver && !el.__handaas_resize_observer){
+        el.__handaas_resize_observer=new ResizeObserver(function(){
+          var current=el.__handaas_chart;
+          if(current && typeof current.resize==='function'){try{current.resize();}catch(ignored){}}
+          else{boot();}
+        });
+        el.__handaas_resize_observer.observe(el);
+      }
+      if((el.getClientRects && el.getClientRects().length===0) || el.clientWidth<2 || el.clientHeight<2){
+        el.setAttribute('data-chart-state','waiting');
+        el.textContent='图表等待布局完成后渲染，数据明细仍可查看。';
+        pendingLayout++;
+        return;
+      }
+      var chart=null;
+      try{
+        var raw=el.getAttribute('data-spec');
+        if(!raw){throw new Error('Missing chart configuration');}
+        // getAttribute already decodes HTML entities; a second decode corrupts labels.
+        var spec=JSON.parse(raw);
+        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        el.textContent='';
+        chart=window.echarts.init(el,null,{renderer:'svg'});
       var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
       if(spec.type==='line'){
         opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
@@ -247,14 +302,47 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
         opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
       }
-      chart.setOption(opt);
-      window.addEventListener('resize',function(){chart.resize();});
+        chart.setOption(opt);
+        el.__handaas_chart=chart;
+        el.__handaas_chart_ready=true;
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','ready');
+        window.__echarts_instances.push(chart);
+        raf(function(){try{chart.resize();}catch(ignored){}});
+      }catch(e){
+        if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
+        el.__handaas_dependency_error=false;
+        el.setAttribute('data-chart-state','error');
+        el.textContent='图表绘制失败，请查看数据明细。';
+      }
     });
+    summarize(nodes);
+    if(pendingLayout && layoutRetries<MAX_LAYOUT_RETRIES){
+      layoutRetries++;
+      setTimeout(boot,100);
+    }
   }
-  if(document.readyState!=='loading'){boot();}else{document.addEventListener('DOMContentLoaded',boot);}
+  window.__handaas_boot_charts=boot;
   window.__echarts_resize_all=function(){
     (window.__echarts_instances||[]).forEach(function(c){try{c.resize();}catch(e){}});
   };
+  function bootAfterLayout(){
+    raf(function(){boot();window.__echarts_resize_all();});
+  }
+  window.addEventListener('resize',window.__echarts_resize_all);
+  window.addEventListener('load',bootAfterLayout);
+  window.addEventListener('pageshow',bootAfterLayout);
+  window.addEventListener('handaas:echarts-ready',bootAfterLayout);
+  window.addEventListener('orientationchange',bootAfterLayout);
+  // A very late external script can still recover after the bounded retry ends.
+  document.addEventListener('load',function(event){
+    if(event.target && event.target.tagName==='SCRIPT'){boot();}
+  },true);
+  document.addEventListener('DOMContentLoaded',bootAfterLayout);
+  document.addEventListener('visibilitychange',boot);
+  if(document.fonts && document.fonts.ready){document.fonts.ready.then(function(){window.__echarts_resize_all();});}
+  [0,300,1000,2500].forEach(function(ms){setTimeout(function(){boot();window.__echarts_resize_all();},ms);});
+  boot();
 })();
 </script>
 </head>
@@ -264,64 +352,64 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     <div class="cover-grid">
       <aside class="cover-side">
         <h2 class="cover-side-title">招聘大数据报告</h2>
-        <p class="cover-date">2026年08月10日</p>
+        <p class="cover-date">2026年10月27日</p>
         <h3 class="toc-title">目录</h3>
         <ol class="toc-list"><li><span>报告摘要</span></li><li><span>查询对象与口径</span></li><li><span>数据总览</span></li><li><span>核心分析</span></li><li><span>代表性记录</span></li><li><span>特征与洞察</span></li></ol>
         <h3 class="scope-title">报告口径</h3>
-        <div class="biz-scope"><div class="biz-scope-item"><span>匹配对象</span><strong>比亚迪股份有限公司</strong></div><div class="biz-scope-item"><span>匹配方式</span><strong>招聘大数据按企业主体匹配（keywordType=name）；招聘 MCP 无模糊查询，需提供企业全称</strong></div><div class="biz-scope-item"><span>数据范围</span><strong>招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</strong></div><div class="biz-scope-item"><span>局限说明</span><strong>数据来自招聘公开数据；少量字段可能存在更新延迟。</strong></div></div>
+        <div class="biz-scope"><div class="biz-scope-item"><span>匹配对象</span><strong>腾讯科技（深圳）有限公司</strong></div><div class="biz-scope-item"><span>匹配方式</span><strong>招聘大数据按企业主体匹配（keywordType=name）；招聘 MCP 无模糊查询，需提供企业全称</strong></div><div class="biz-scope-item"><span>数据范围</span><strong>招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</strong></div><div class="biz-scope-item"><span>局限说明</span><strong>数据来自招聘公开数据；少量字段可能存在更新延迟。</strong></div></div>
       </aside>
       <section class="cover-main">
         <p class="report-kicker">RECRUITMENT DATA RESEARCH</p>
-        <h1>比亚迪股份有限公司 招聘大数据报告</h1>
-        <p class="report-lead">本报告以“比亚迪股份有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 136195.0、近三月招聘人数 136195.0、近三月岗位数 1、平均更新频率 35331525、平均薪酬 7853.8367899731。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p>
+        <h1>腾讯科技（深圳）有限公司 招聘大数据报告</h1>
+        <p class="report-lead">本报告以“腾讯科技（深圳）有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 549.0、近三月招聘人数 549.0、近三月岗位数 549、平均更新频率 55709 秒、平均薪酬 23,552 元/月。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p>
         <div class="abstract-box">报告涵盖查询对象、数据总览、核心分析、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
-        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">136195.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">136195.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">35331525</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">7853.8367899731</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">73892 个</span></div><div class="biz-metric"><span class="m-name">招聘城市数</span><span class="m-tag"></span><span class="m-value">16</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">45.9%</span></div><div class="biz-metric"><span class="m-name">招聘渠道数</span><span class="m-tag"></span><span class="m-value">25</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">3</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div>
-        <ul class="exec-list"><li>当前招聘规模反映企业业务扩张与人才需求的即时强度，是组织活跃度的直接信号。</li><li>近三月/当前比反映招聘收敛度：保持平稳节奏。</li><li>薪酬带集中度反映人才定位：偏低薪区间偏多常见于运营/客服密集型团队，偏高薪区间偏多则反映核心技术岗位（研发/算法）占比较高。</li><li>薪酬中位均值反映企业人才预算与岗位定位；结合行业基准可评估其人才竞争力，高均值通常对应研发/技术密集型团队。</li><li>渠道覆盖面反映招聘触达能力；主流招聘平台（Boss/猎聘/智联等）为主时偏向中高端与白领岗位，制造业平台偏多则对应一线生产岗位。</li></ul>
-        <div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid"><div class="finding-card"><p class="f-label">招聘规模</p><p class="f-text">当前在招人数 136195.0。</p></div><div class="finding-card"><p class="f-label">近期招聘节奏</p><p class="f-text">近三月招聘 136195.0，为当前在招的 1.0x。</p></div><div class="finding-card"><p class="f-label">薪酬带集中度</p><p class="f-text">“0-10K”区间岗位占比约 56%。</p></div><div class="finding-card"><p class="f-label">薪酬水平</p><p class="f-text">样本岗位薪酬中位均值约 11K/月（n=50）。</p></div></div></div>
-        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">雇主招聘画像</span><span class="dim-tag">招聘需求统计</span><span class="dim-tag">福利标签</span><span class="dim-tag">岗位关键词</span><span class="dim-tag">招聘渠道分布</span><span class="dim-tag">薪酬区间分布</span><span class="dim-tag">招聘城市分布</span><span class="dim-tag">招聘趋势</span><span class="dim-tag">职位薪酬明细</span><span class="dim-tag">招聘职位明细</span></div></div>
+        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">549.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">549.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">549</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">55709 秒</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">23,552 元/月</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">25686 个</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">2</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div>
+        <ul class="exec-list"><li>该值仅表示数据源当前记录的招聘人数；需结合历史序列和人员净增减后再判断扩张状态。</li><li>近三月与当前口径可用于描述样本变化，但不能单独证明岗位补齐或业务扩张。</li><li>该分布仅描述已返回岗位样本的薪酬区间，不能据此推断整体岗位类型或团队结构。</li><li>该样本均值描述已返回岗位的薪酬区间，不代表整体人才竞争力或岗位结构。</li><li>城市集中度仅描述招聘样本分布，不能直接等同于企业业务地域重心。</li></ul>
+        <div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid"><div class="finding-card"><p class="f-label">招聘规模</p><p class="f-text">当前在招人数 549.0。</p></div><div class="finding-card"><p class="f-label">近期招聘节奏</p><p class="f-text">近三月招聘 549.0，为当前在招的 1.0x。</p></div><div class="finding-card"><p class="f-label">薪酬带集中度</p><p class="f-text">“20-30K”区间岗位占比约 67%。</p></div><div class="finding-card"><p class="f-label">薪酬水平</p><p class="f-text">样本岗位薪酬中位均值约 25K/月（n=3）。</p></div></div></div>
+        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">雇主招聘画像</span><span class="dim-tag">招聘需求统计</span><span class="dim-tag">福利标签</span><span class="dim-tag">岗位关键词</span><span class="dim-tag">招聘渠道分布</span><span class="dim-tag">薪酬区间分布</span><span class="dim-tag">招聘城市分布</span><span class="dim-tag">招聘趋势</span><span class="dim-tag">招聘数量口径核验</span><span class="dim-tag">职位薪酬明细</span><span class="dim-tag">招聘职位明细</span></div></div>
         <div class="cover-scope-bar"><span class="scope-item"><em>数据产品</em>招聘明细、招聘统计</span><span class="scope-item"><em>覆盖范围</em>招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</span></div>
       </section>
     </div>
   </article>
   <main class="research-doc">
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">本报告以“比亚迪股份有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 136195.0、近三月招聘人数 136195.0、近三月岗位数 1、平均更新频率 35331525、平均薪酬 7853.8367899731。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div><div class="info-list"><div class="info-row"><span class="info-label">匹配对象</span><span class="info-value">比亚迪股份有限公司</span></div><div class="info-row"><span class="info-label">匹配方式</span><span class="info-value">招聘大数据按企业主体匹配（keywordType=name）；招聘 MCP 无模糊查询，需提供企业全称</span></div><div class="info-row"><span class="info-label">数据范围</span><span class="info-value">招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</span></div><div class="info-row"><span class="info-label">局限说明</span><span class="info-value">数据来自招聘公开数据；少量字段可能存在更新延迟。</span></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">136195.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">136195.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">35331525</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">7853.8367899731</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">73892 个</span></div><div class="biz-metric"><span class="m-name">招聘城市数</span><span class="m-tag"></span><span class="m-value">16</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">45.9%</span></div><div class="biz-metric"><span class="m-name">招聘渠道数</span><span class="m-tag"></span><span class="m-value">25</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">3</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div><h3 class="biz-subsection-title">雇主招聘画像</h3><div class="info-list"><div class="info-row"><span class="info-label">当前招聘人数</span><span class="info-value">136195.0</span></div><div class="info-row"><span class="info-label">近三月招聘人数</span><span class="info-value">136195.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">1</span></div><div class="info-row"><span class="info-label">岗位平均更新频率(秒)</span><span class="info-value">35331525</span></div><div class="info-row"><span class="info-label">平均薪酬(元/月)</span><span class="info-value">7853.8367899731</span></div><div class="info-row"><span class="info-label">招聘城市数</span><span class="info-value">50</span></div><div class="info-row"><span class="info-label">主要城市</span><span class="info-value">三亚市、三明市、上海、上海市、上饶市、东莞市、东营市、中山、中山市、临沂市…</span></div><div class="info-row"><span class="info-label">招聘渠道数</span><span class="info-value">25</span></div><div class="info-row"><span class="info-label">主要渠道</span><span class="info-value">Boss直聘、海峡招聘网、钢结构招聘网、职友集、中华英才网、中山人才网、厉聘招聘网、城市联盟、今日招聘、百大英才网</span></div><div class="info-row"><span class="info-label">用工类型</span><span class="info-value">全职、实习</span></div></div>
-<h3 class="biz-subsection-title">招聘需求统计</h3><div class="info-list"><div class="info-row"><span class="info-label">当前招聘规模</span><span class="info-value">136195.0</span></div><div class="info-row"><span class="info-label">近三月招聘规模</span><span class="info-value">136195.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">1</span></div><div class="info-row"><span class="info-label">平均薪酬水平</span><span class="info-value">7853.8367899731</span></div><div class="info-row"><span class="info-label">业务关键词</span><span class="info-value">工艺、品质、项目</span></div><div class="info-row"><span class="info-label">岗位关键词</span><span class="info-value">工程师、高级工程师、专员</span></div></div>
-<h3 class="biz-subsection-title">福利标签</h3><div class="tag-row">[ &quot;2430元/月&quot;, &quot;2100元/月&quot;, &quot;2376元/月&quot;, &quot;2250元/月&quot;, &quot;2300元/月&quot;, &quot;2420元/月&quot;, &quot;2200元/月&quot;, &quot;2150元/月&quot;, &quot;2000元/月&quot;, &quot;2140元/月&quot;, &quot;10000元/月&quot;, &quot;2130元/月&quot;, &quot;2024&quot;, &quot;2090元/月&quot;, &quot;2080元/月&quot;, &quot;2360元/月&quot;, &quot;2450元/月&quot;, &quot;14薪&quot;, &quot;2160元/月&quot;, &quot;2400元/月&quot; ]</div>
-<h3 class="biz-subsection-title">岗位关键词</h3><div class="tag-row">[ &quot;工程师&quot;, &quot;高级工程师&quot;, &quot;专员&quot; ]</div>
-<p class="biz-section-note">企业发布的招聘渠道列表</p><div class="chart-box"><h4 class="chart-title">招聘渠道分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;h&quot;,&quot;names&quot;:[&quot;Boss直聘&quot;,&quot;海峡招聘网&quot;,&quot;钢结构招聘网&quot;,&quot;职友集&quot;,&quot;中华英才网&quot;,&quot;中山人才网&quot;,&quot;厉聘招聘网&quot;,&quot;城市联盟&quot;,&quot;今日招聘&quot;,&quot;百大英才网&quot;,&quot;36人才网&quot;,&quot;一览英才网&quot;,&quot;拉勾网&quot;,&quot;鱼泡直聘网&quot;,&quot;智联招聘&quot;,&quot;福建人才网&quot;,&quot;实习僧&quot;,&quot;前程无忧&quot;,&quot;找工易人才网&quot;,&quot;58同城&quot;,&quot;应届生求职网&quot;,&quot;中国公共招聘网&quot;,&quot;百度招聘&quot;,&quot;汇博网&quot;,&quot;其他渠道&quot;],&quot;values&quot;:[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>渠道</th><th>岗位来源数</th></tr></thead><tbody><tr><td>Boss直聘</td><td>1</td></tr><tr><td>海峡招聘网</td><td>1</td></tr><tr><td>钢结构招聘网</td><td>1</td></tr><tr><td>职友集</td><td>1</td></tr><tr><td>中华英才网</td><td>1</td></tr><tr><td>中山人才网</td><td>1</td></tr><tr><td>厉聘招聘网</td><td>1</td></tr><tr><td>城市联盟</td><td>1</td></tr><tr><td>今日招聘</td><td>1</td></tr><tr><td>百大英才网</td><td>1</td></tr><tr><td>36人才网</td><td>1</td></tr><tr><td>一览英才网</td><td>1</td></tr><tr><td>拉勾网</td><td>1</td></tr><tr><td>鱼泡直聘网</td><td>1</td></tr><tr><td>智联招聘</td><td>1</td></tr><tr><td>福建人才网</td><td>1</td></tr><tr><td>实习僧</td><td>1</td></tr><tr><td>前程无忧</td><td>1</td></tr><tr><td>找工易人才网</td><td>1</td></tr><tr><td>58同城</td><td>1</td></tr><tr><td>应届生求职网</td><td>1</td></tr><tr><td>中国公共招聘网</td><td>1</td></tr><tr><td>百度招聘</td><td>1</td></tr><tr><td>汇博网</td><td>1</td></tr><tr><td>其他渠道</td><td>1</td></tr></tbody></table></div></details></div>
-<p class="biz-section-note">按月薪区间聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">薪酬区间分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;v&quot;,&quot;names&quot;:[&quot;0-10K&quot;,&quot;10-20K&quot;,&quot;20-30K&quot;],&quot;values&quot;:[28.0,18.0,4.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>薪酬区间</th><th>岗位数</th></tr></thead><tbody><tr><td>0-10K</td><td>28</td></tr><tr><td>10-20K</td><td>18</td></tr><tr><td>20-30K</td><td>4</td></tr></tbody></table></div></details></div>
-<p class="biz-section-note">按城市聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">招聘城市分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;h&quot;,&quot;names&quot;:[&quot;汕尾市&quot;,&quot;深圳市&quot;,&quot;抚州市&quot;,&quot;西安市&quot;,&quot;韶关市&quot;,&quot;惠州市&quot;,&quot;合肥市&quot;,&quot;郑州市&quot;,&quot;温州市&quot;,&quot;长治市&quot;,&quot;蚌埠市&quot;,&quot;宝鸡市&quot;,&quot;临沂市&quot;,&quot;泰安市&quot;,&quot;绍兴市&quot;,&quot;海口市&quot;],&quot;values&quot;:[16.0,10.0,8.0,8.0,6.0,4.0,4.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>城市</th><th>岗位数</th></tr></thead><tbody><tr><td>汕尾市</td><td>16</td></tr><tr><td>深圳市</td><td>10</td></tr><tr><td>抚州市</td><td>8</td></tr><tr><td>西安市</td><td>8</td></tr><tr><td>韶关市</td><td>6</td></tr><tr><td>惠州市</td><td>4</td></tr><tr><td>合肥市</td><td>4</td></tr><tr><td>郑州市</td><td>2</td></tr><tr><td>温州市</td><td>2</td></tr><tr><td>长治市</td><td>2</td></tr><tr><td>蚌埠市</td><td>2</td></tr><tr><td>宝鸡市</td><td>2</td></tr><tr><td>临沂市</td><td>2</td></tr><tr><td>泰安市</td><td>2</td></tr><tr><td>绍兴市</td><td>2</td></tr><tr><td>海口市</td><td>2</td></tr></tbody></table></div></details></div>
-<h3 class="biz-subsection-title">招聘趋势</h3><p class="biz-section-note">招聘趋势概览（汇总指标，非逐月时间序列）</p><div class="table-wrap"><table><thead><tr><th>指标</th><th>数值</th></tr></thead><tbody><tr><td>当前招聘人数</td><td>136195.0</td></tr><tr><td>近三月招聘人数</td><td>136195.0</td></tr><tr><td>近三月岗位数</td><td>1</td></tr><tr><td>岗位平均更新频率</td><td>35331525</td></tr><tr><td>平均薪酬</td><td>7853.8367899731</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">职位薪酬明细</h3><p class="biz-section-note">共 73892 条，展示前 50 条</p><div class="table-wrap"><table><thead><tr><th>职位</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>比亚迪操机员</td><td>-</td><td>智联招聘</td><td>5K-6K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>郑州市</td><td>智联招聘</td><td>8K-15K</td><td>2026-08-10</td></tr><tr><td>文员</td><td>汕尾市</td><td>智联招聘</td><td>5K-9K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>-</td><td>智联招聘</td><td>9K-18K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>温州市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>抚州比亚迪工厂直招有社保</td><td>抚州市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>汕尾比亚迪叉车司机招聘</td><td>长治市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师</td><td>-</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>电气工程师</td><td>蚌埠市</td><td>智联招聘</td><td>9K-18K</td><td>2026-08-10</td></tr><tr><td>安阳比亚迪普工直聘</td><td>-</td><td>智联招聘</td><td>4K-5K</td><td>2026-08-10</td></tr><tr><td>普工技工</td><td>宝鸡市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>助理工艺工程师</td><td>韶关市</td><td>智联招聘</td><td>8K-12K</td><td>2026-08-10</td></tr><tr><td>工艺员</td><td>汕尾市</td><td>智联招聘</td><td>7K-9K</td><td>2026-08-10</td></tr><tr><td>注塑工艺工程师(急招)</td><td>深圳市</td><td>智联招聘</td><td>9K-11K</td><td>2026-08-10</td></tr><tr><td>电工</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>东莞谢岗直招普工-包住福利好</td><td>-</td><td>职友集</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师</td><td>惠州市</td><td>智联招聘</td><td>13K-23K</td><td>2026-08-10</td></tr><tr><td>汽车涂装工不限经验6000-8000当天分宿舍</td><td>抚州市</td><td>智联招聘</td><td>6K-9K</td><td>2026-08-10</td></tr><tr><td>比亚迪救援客服</td><td>西安市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>抚州市</td><td>智联招聘</td><td>10K-15K</td><td>2026-08-10</td></tr><tr><td>总经理助理</td><td>抚州市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>高新比亚迪—装配电工</td><td>西安市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>SMT技术员 比亚迪直招</td><td>合肥市</td><td>职友集</td><td>6K-9K</td><td>2026-08-10</td></tr><tr><td>车辆调度员</td><td>深圳市</td><td>职友集</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>销售经理(比亚迪方程豹)</td><td>临沂市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>品质体系工程师</td><td>合肥市</td><td>智联招聘</td><td>9K-12K</td><td>2026-08-10</td></tr><tr><td>西语人事经理</td><td>-</td><td>职友集</td><td>20K-35K</td><td>2026-08-10</td></tr><tr><td>汕尾红海湾设备维修</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>沙特财务主管</td><td>深圳市</td><td>职友集</td><td>18K-30K</td><td>2026-08-10</td></tr><tr><td>高新比亚迪工厂直招操作工</td><td>西安市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>泰安市</td><td>智联招聘</td><td>6K-12K</td><td>2026-08-10</td></tr><tr><td>高级结构工程师</td><td>深圳市</td><td>智联招聘</td><td>15K-30K</td><td>2026-08-10</td></tr><tr><td>比亚迪客服代表</td><td>-</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>助理机械工程师</td><td>西安市</td><td>职友集</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>焊接机调机员</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>实验员</td><td>-</td><td>职友集</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>软件设备工程师</td><td>绍兴市</td><td>智联招聘</td><td>10K-18K</td><td>2026-08-10</td></tr><tr><td>客服代表(粤语)</td><td>深圳市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>比亚迪操作工惠州大亚湾五险一金包住</td><td>惠州市</td><td>智联招聘</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>高级模具工艺工程师(塑胶)</td><td>韶关市</td><td>智联招聘</td><td>18K-28K</td><td>2026-08-10</td></tr><tr><td>省模抛光工(塑胶-韶关)</td><td>韶关市</td><td>智联招聘</td><td>7K-13K</td><td>2026-08-10</td></tr><tr><td>生产工程师</td><td>汕尾市</td><td>智联招聘</td><td>10K-15K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师(前沿)</td><td>-</td><td>智联招聘</td><td>13K-23K</td><td>2026-08-10</td></tr><tr><td>深汕小漠比亚迪急聘操作工入职缴纳五险一金</td><td>汕尾市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>汽车4S店DCC邀约专员</td><td>-</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>普通铣工钻工</td><td>汕尾市</td><td>智联招聘</td><td>8K-10K</td><td>2026-08-10</td></tr><tr><td>底薪一万招募汽车销冠(比亚迪高端品牌)</td><td>海口市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>比亚迪客服代表</td><td>-</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>高级项目管理工程师</td><td>-</td><td>智联招聘</td><td>8K-16K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>-</td><td>智联招聘</td><td>9K-14K</td><td>2026-08-10</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">招聘职位明细</h3><p class="biz-section-note">共 73892 条，展示前 50 条</p><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>比亚迪操机员</td><td>-</td><td>智联招聘</td><td>5K-6K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>郑州市</td><td>智联招聘</td><td>8K-15K</td><td>2026-08-10</td></tr><tr><td>文员</td><td>汕尾市</td><td>智联招聘</td><td>5K-9K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>-</td><td>智联招聘</td><td>9K-18K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>温州市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>抚州比亚迪工厂直招有社保</td><td>抚州市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>汕尾比亚迪叉车司机招聘</td><td>长治市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师</td><td>-</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>电气工程师</td><td>蚌埠市</td><td>智联招聘</td><td>9K-18K</td><td>2026-08-10</td></tr><tr><td>安阳比亚迪普工直聘</td><td>-</td><td>智联招聘</td><td>4K-5K</td><td>2026-08-10</td></tr><tr><td>普工技工</td><td>宝鸡市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>助理工艺工程师</td><td>韶关市</td><td>智联招聘</td><td>8K-12K</td><td>2026-08-10</td></tr><tr><td>工艺员</td><td>汕尾市</td><td>智联招聘</td><td>7K-9K</td><td>2026-08-10</td></tr><tr><td>注塑工艺工程师(急招)</td><td>深圳市</td><td>智联招聘</td><td>9K-11K</td><td>2026-08-10</td></tr><tr><td>电工</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>东莞谢岗直招普工-包住福利好</td><td>-</td><td>职友集</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师</td><td>惠州市</td><td>智联招聘</td><td>13K-23K</td><td>2026-08-10</td></tr><tr><td>汽车涂装工不限经验6000-8000当天分宿舍</td><td>抚州市</td><td>智联招聘</td><td>6K-9K</td><td>2026-08-10</td></tr><tr><td>比亚迪救援客服</td><td>西安市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>机械工程师</td><td>抚州市</td><td>智联招聘</td><td>10K-15K</td><td>2026-08-10</td></tr><tr><td>总经理助理</td><td>抚州市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>高新比亚迪—装配电工</td><td>西安市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>SMT技术员 比亚迪直招</td><td>合肥市</td><td>职友集</td><td>6K-9K</td><td>2026-08-10</td></tr><tr><td>车辆调度员</td><td>深圳市</td><td>职友集</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>销售经理(比亚迪方程豹)</td><td>临沂市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>品质体系工程师</td><td>合肥市</td><td>智联招聘</td><td>9K-12K</td><td>2026-08-10</td></tr><tr><td>西语人事经理</td><td>-</td><td>职友集</td><td>20K-35K</td><td>2026-08-10</td></tr><tr><td>汕尾红海湾设备维修</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>沙特财务主管</td><td>深圳市</td><td>职友集</td><td>18K-30K</td><td>2026-08-10</td></tr><tr><td>高新比亚迪工厂直招操作工</td><td>西安市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>泰安市</td><td>智联招聘</td><td>6K-12K</td><td>2026-08-10</td></tr><tr><td>高级结构工程师</td><td>深圳市</td><td>智联招聘</td><td>15K-30K</td><td>2026-08-10</td></tr><tr><td>比亚迪客服代表</td><td>-</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>助理机械工程师</td><td>西安市</td><td>职友集</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>焊接机调机员</td><td>汕尾市</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>实验员</td><td>-</td><td>职友集</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>软件设备工程师</td><td>绍兴市</td><td>智联招聘</td><td>10K-18K</td><td>2026-08-10</td></tr><tr><td>客服代表(粤语)</td><td>深圳市</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>比亚迪操作工惠州大亚湾五险一金包住</td><td>惠州市</td><td>智联招聘</td><td>5K-7K</td><td>2026-08-10</td></tr><tr><td>高级模具工艺工程师(塑胶)</td><td>韶关市</td><td>智联招聘</td><td>18K-28K</td><td>2026-08-10</td></tr><tr><td>省模抛光工(塑胶-韶关)</td><td>韶关市</td><td>智联招聘</td><td>7K-13K</td><td>2026-08-10</td></tr><tr><td>生产工程师</td><td>汕尾市</td><td>智联招聘</td><td>10K-15K</td><td>2026-08-10</td></tr><tr><td>高级机械工程师(前沿)</td><td>-</td><td>智联招聘</td><td>13K-23K</td><td>2026-08-10</td></tr><tr><td>深汕小漠比亚迪急聘操作工入职缴纳五险一金</td><td>汕尾市</td><td>智联招聘</td><td>6K-8K</td><td>2026-08-10</td></tr><tr><td>汽车4S店DCC邀约专员</td><td>-</td><td>智联招聘</td><td>7K-10K</td><td>2026-08-10</td></tr><tr><td>普通铣工钻工</td><td>汕尾市</td><td>智联招聘</td><td>8K-10K</td><td>2026-08-10</td></tr><tr><td>底薪一万招募汽车销冠(比亚迪高端品牌)</td><td>海口市</td><td>智联招聘</td><td>10K-20K</td><td>2026-08-10</td></tr><tr><td>比亚迪客服代表</td><td>-</td><td>智联招聘</td><td>5K-8K</td><td>2026-08-10</td></tr><tr><td>高级项目管理工程师</td><td>-</td><td>智联招聘</td><td>8K-16K</td><td>2026-08-10</td></tr><tr><td>汽车销售顾问</td><td>-</td><td>智联招聘</td><td>9K-14K</td><td>2026-08-10</td></tr></tbody></table></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>薪酬</th></tr></thead><tbody><tr><td>比亚迪操机员</td><td>-</td><td>5K-6K</td></tr><tr><td>机械工程师</td><td>郑州市</td><td>8K-15K</td></tr><tr><td>文员</td><td>汕尾市</td><td>5K-9K</td></tr><tr><td>汽车销售顾问</td><td>-</td><td>9K-18K</td></tr><tr><td>机械工程师</td><td>温州市</td><td>10K-20K</td></tr><tr><td>抚州比亚迪工厂直招有社保</td><td>抚州市</td><td>5K-8K</td></tr><tr><td>汕尾比亚迪叉车司机招聘</td><td>长治市</td><td>5K-8K</td></tr><tr><td>高级机械工程师</td><td>-</td><td>10K-20K</td></tr><tr><td>电气工程师</td><td>蚌埠市</td><td>9K-18K</td></tr><tr><td>安阳比亚迪普工直聘</td><td>-</td><td>4K-5K</td></tr><tr><td>普工技工</td><td>宝鸡市</td><td>5K-8K</td></tr><tr><td>助理工艺工程师</td><td>韶关市</td><td>8K-12K</td></tr><tr><td>工艺员</td><td>汕尾市</td><td>7K-9K</td></tr><tr><td>注塑工艺工程师(急招)</td><td>深圳市</td><td>9K-11K</td></tr><tr><td>电工</td><td>汕尾市</td><td>7K-10K</td></tr><tr><td>东莞谢岗直招普工-包住福利好</td><td>-</td><td>5K-7K</td></tr><tr><td>高级机械工程师</td><td>惠州市</td><td>13K-23K</td></tr><tr><td>汽车涂装工不限经验6000-8000当天分宿舍</td><td>抚州市</td><td>6K-9K</td></tr><tr><td>比亚迪救援客服</td><td>西安市</td><td>5K-8K</td></tr><tr><td>机械工程师</td><td>抚州市</td><td>10K-15K</td></tr></tbody></table></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">本报告以“腾讯科技（深圳）有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 549.0、近三月招聘人数 549.0、近三月岗位数 549、平均更新频率 55709 秒、平均薪酬 23,552 元/月。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div><div class="info-list"><div class="info-row"><span class="info-label">匹配对象</span><span class="info-value">腾讯科技（深圳）有限公司</span></div><div class="info-row"><span class="info-label">匹配方式</span><span class="info-value">招聘大数据按企业主体匹配（keywordType=name）；招聘 MCP 无模糊查询，需提供企业全称</span></div><div class="info-row"><span class="info-label">数据范围</span><span class="info-value">招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</span></div><div class="info-row"><span class="info-label">局限说明</span><span class="info-value">数据来自招聘公开数据；少量字段可能存在更新延迟。</span></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">549.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">549.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">549</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">55709 秒</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">23,552 元/月</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">25686 个</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">2</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div><h3 class="biz-subsection-title">雇主招聘画像</h3><div class="info-list"><div class="info-row"><span class="info-label">当前招聘人数</span><span class="info-value">549.0</span></div><div class="info-row"><span class="info-label">近三月招聘人数</span><span class="info-value">549.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">549</span></div><div class="info-row"><span class="info-label">岗位平均更新频率(秒)</span><span class="info-value">55709</span></div><div class="info-row"><span class="info-label">平均薪酬(元/月)</span><span class="info-value">23,552 元/月</span></div><div class="info-row"><span class="info-label">画像返回城市数</span><span class="info-value">50</span></div><div class="info-row"><span class="info-label">主要城市</span><span class="info-value">上海、上海市、丹东市、乌鲁木齐市、兰州市、北京、北京市、南京、南京市、南宁…</span></div><div class="info-row"><span class="info-label">用工类型</span><span class="info-value">全职、兼职、实习</span></div></div>
+<h3 class="biz-subsection-title">招聘需求统计</h3><div class="info-list"><div class="info-row"><span class="info-label">业务关键词</span><span class="info-value">产品、后台开发、前端开发</span></div><div class="info-row"><span class="info-label">岗位关键词</span><span class="info-value">工程师、经理、高级工程师</span></div></div>
+<h3 class="biz-subsection-title">福利标签</h3><div class="tag-row">[ &quot;AIGC-动漫创新产品&quot;, &quot;TME运维工程师&quot;, &quot;JDK&quot;, &quot;一线大厂&quot;, &quot;AI&quot;, &quot;Kona&quot;, &quot;Flink&quot;, &quot;AIGC算法专家或总监&quot;, &quot;一对一导师&quot;, &quot;leader专业能力强&quot;, &quot;linuxc&quot;, &quot;Tencent&quot;, &quot;AIGC产品负责人&quot;, &quot;上升期业务&quot;, &quot;8小时工作制&quot;, &quot;3A&quot;, &quot;AI前沿应用场景&quot;, &quot;AIGC产品&quot;, &quot;Python虚拟机&quot;, &quot;TME&quot; ]</div>
+<h3 class="biz-subsection-title">岗位关键词</h3><div class="tag-row">[ &quot;工程师&quot;, &quot;经理&quot;, &quot;高级工程师&quot; ]</div>
+<p class="biz-section-note">按月薪区间聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">薪酬区间分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;v&quot;,&quot;names&quot;:[&quot;20-30K&quot;,&quot;30K+&quot;],&quot;values&quot;:[2.0,1.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>薪酬区间</th><th>岗位数</th></tr></thead><tbody><tr><td>20-30K</td><td>2</td></tr><tr><td>30K+</td><td>1</td></tr></tbody></table></div></details></div>
+<p class="biz-section-note">按城市聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">招聘城市分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;h&quot;,&quot;names&quot;:[&quot;深圳市&quot;],&quot;values&quot;:[4.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>城市</th><th>岗位数</th></tr></thead><tbody><tr><td>深圳市</td><td>4</td></tr></tbody></table></div></details></div>
+<h3 class="biz-subsection-title">招聘趋势</h3><p class="biz-section-note">招聘趋势概览（汇总指标，非逐月时间序列）</p><div class="table-wrap"><table><thead><tr><th>指标</th><th>数值</th></tr></thead><tbody><tr><td>当前招聘人数</td><td>549.0</td></tr><tr><td>近三月招聘人数</td><td>549.0</td></tr><tr><td>近三月岗位数</td><td>549</td></tr><tr><td>岗位平均更新频率(秒)</td><td>55709</td></tr><tr><td>平均薪酬</td><td>23,552 元/月</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">招聘数量口径核验</h3><div class="info-list"><div class="info-row"><span class="info-label">趋势视图当前招聘人数</span><span class="info-value">549</span></div><div class="info-row"><span class="info-label">职位检索命中总数</span><span class="info-value">25686</span></div><div class="info-row"><span class="info-label">核验结论</span><span class="info-value">口径冲突：两个产品返回不同数量，需分别解读，不得互相替代</span></div></div>
+<h3 class="biz-subsection-title">职位薪酬明细</h3><p class="biz-section-note">共 25686 条，展示前 5 条</p><div class="table-wrap"><table><thead><tr><th>职位</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>游戏产品经理</td><td>深圳市</td><td>-</td><td>23K-26K</td><td>2026-10-20</td></tr><tr><td>前台开发工程师(VC /javascript ajax php/.net/web应用)</td><td>深圳市</td><td>-</td><td>-</td><td>2026-10-18</td></tr><tr><td>游戏研发管理总监</td><td>深圳市</td><td>-</td><td>-</td><td>2026-10-18</td></tr><tr><td>游戏客户端开发工程师</td><td>深圳市</td><td>-</td><td>15K-28K</td><td>2026-10-12</td></tr><tr><td>网络交付项目经理</td><td>-</td><td>-</td><td>25K-35K</td><td>2026-10-10</td></tr></tbody></table></div>
+<h3 class="biz-subsection-title">招聘职位明细</h3><p class="biz-section-note">共 25686 条，展示前 5 条</p><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>游戏产品经理</td><td>深圳市</td><td>-</td><td>23K-26K</td><td>2026-10-20</td></tr><tr><td>前台开发工程师(VC /javascript ajax php/.net/web应用)</td><td>深圳市</td><td>-</td><td>-</td><td>2026-10-18</td></tr><tr><td>游戏研发管理总监</td><td>深圳市</td><td>-</td><td>-</td><td>2026-10-18</td></tr><tr><td>游戏客户端开发工程师</td><td>深圳市</td><td>-</td><td>15K-28K</td><td>2026-10-12</td></tr><tr><td>网络交付项目经理</td><td>-</td><td>-</td><td>25K-35K</td><td>2026-10-10</td></tr></tbody></table></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>薪酬</th></tr></thead><tbody><tr><td>游戏产品经理</td><td>深圳市</td><td>23K-26K</td></tr><tr><td>前台开发工程师(VC /javascript ajax php/.net/web应用)</td><td>深圳市</td><td>-</td></tr><tr><td>游戏研发管理总监</td><td>深圳市</td><td>-</td></tr><tr><td>游戏客户端开发工程师</td><td>深圳市</td><td>15K-28K</td></tr><tr><td>网络交付项目经理</td><td>-</td><td>25K-35K</td></tr></tbody></table></div></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>特征与洞察</h2><p class="biz-section-note">基于数据的结构化解读。</p></div><span class="biz-tag">Insights</span></div><div class="structural-feature-grid"><article class="structural-feature-card">
   <h3>招聘规模</h3>
-  <p class="structural-evidence">当前在招人数 136195.0。</p>
-  <p>当前招聘规模反映企业业务扩张与人才需求的即时强度，是组织活跃度的直接信号。</p>
+  <p class="structural-evidence">当前在招人数 549.0。</p>
+  <p>该值仅表示数据源当前记录的招聘人数；需结合历史序列和人员净增减后再判断扩张状态。</p>
 </article><article class="structural-feature-card">
   <h3>近期招聘节奏</h3>
-  <p class="structural-evidence">近三月招聘 136195.0，为当前在招的 1.0x。</p>
-  <p>近三月/当前比反映招聘收敛度：保持平稳节奏。</p>
+  <p class="structural-evidence">近三月招聘 549.0，为当前在招的 1.0x。</p>
+  <p>近三月与当前口径可用于描述样本变化，但不能单独证明岗位补齐或业务扩张。</p>
 </article><article class="structural-feature-card">
   <h3>薪酬带集中度</h3>
-  <p class="structural-evidence">“0-10K”区间岗位占比约 56%。</p>
-  <p>薪酬带集中度反映人才定位：偏低薪区间偏多常见于运营/客服密集型团队，偏高薪区间偏多则反映核心技术岗位（研发/算法）占比较高。</p>
+  <p class="structural-evidence">“20-30K”区间岗位占比约 67%。</p>
+  <p>该分布仅描述已返回岗位样本的薪酬区间，不能据此推断整体岗位类型或团队结构。</p>
 </article><article class="structural-feature-card">
   <h3>薪酬水平</h3>
-  <p class="structural-evidence">样本岗位薪酬中位均值约 11K/月（n=50）。</p>
-  <p>薪酬中位均值反映企业人才预算与岗位定位；结合行业基准可评估其人才竞争力，高均值通常对应研发/技术密集型团队。</p>
-</article><article class="structural-feature-card">
-  <h3>招聘渠道</h3>
-  <p class="structural-evidence">覆盖 25 个招聘渠道，主流渠道为“Boss直聘”。</p>
-  <p>渠道覆盖面反映招聘触达能力；主流招聘平台（Boss/猎聘/智联等）为主时偏向中高端与白领岗位，制造业平台偏多则对应一线生产岗位。</p>
+  <p class="structural-evidence">样本岗位薪酬中位均值约 25K/月（n=3）。</p>
+  <p>该样本均值描述已返回岗位的薪酬区间，不代表整体人才竞争力或岗位结构。</p>
 </article><article class="structural-feature-card">
   <h3>地域集中度</h3>
-  <p class="structural-evidence">“汕尾市”岗位占比约 22%，前 2 城市合计 35%（CR2），覆盖 16 个城市。</p>
-  <p>招聘城市集中度反映业务地域重心：CR2 偏高通常意味着总部或核心研发/运营中心；城市数偏多则代表多区域分布式团队。</p>
+  <p class="structural-evidence">“深圳市”岗位占比约 100%，前 2 城市合计 100%（CR2），覆盖 1 个城市。</p>
+  <p>城市集中度仅描述招聘样本分布，不能直接等同于企业业务地域重心。</p>
+</article><article class="structural-feature-card">
+  <h3>招聘数量口径冲突</h3>
+  <p class="structural-evidence">趋势视图当前招聘人数 549；职位检索命中总数 25686。</p>
+  <p>两个产品口径不一致，应分别披露，不能将其中任一数值替代另一口径。</p>
 </article></div></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>名词解释</h2><p class="biz-section-note">报告中涉及的专业术语与统计指标说明。</p></div><span class="biz-tag">Glossary</span></div><div class="glossary-list"><div class="glossary-row"><span class="glossary-term">CR3</span><span class="glossary-def">行业集中度指标（Concentration Ratio 3），指排名前 3 的类别合计占总量的百分比。CR3 越高说明分布越集中，反之越分散。常用于衡量城市、品牌、产品类型等的集中程度。</span></div><div class="glossary-row"><span class="glossary-term">CR2</span><span class="glossary-def">行业集中度指标（Concentration Ratio 2），指排名前 2 的类别合计占总量的百分比。含义同 CR3，但仅统计前 2 名。</span></div></div></section>
   </main>

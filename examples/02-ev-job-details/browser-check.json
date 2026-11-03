@@ -1,0 +1,39 @@
+{
+  "metric_overflows": [],
+  "document_title": "比亚迪股份有限公司 招聘大数据报告",
+  "title_matches": true,
+  "charts": 2,
+  "rendered_charts": 2,
+  "zero_size_charts": 0,
+  "chart_details": [
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 27
+    },
+    {
+      "width": 984,
+      "height": 300,
+      "instance": true,
+      "renderer": true,
+      "graphics": 45
+    }
+  ],
+  "page_width": 1905,
+  "viewport_width": 1920,
+  "empty_headers": 0,
+  "script_errors": [],
+  "external_resources": 0,
+  "external_asset_references": 0,
+  "ok": true,
+  "report_html_sha256": "782b2177578a060684b21b226bc62c7df28478e946f00379d930740be8b27dc2",
+  "report_json_sha256": "78b5a82872905819423eded54fa7ca2c1c72dd4060e547addcfec974aece60e6",
+  "skill": "recruitment-skill",
+  "id": "02-ev-job-details",
+  "browser": "Ego Lite",
+  "space_id": 4,
+  "offline": true,
+  "checked_at": "2026-10-27T03:04:04.733Z"
+}
