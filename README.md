@@ -30,7 +30,7 @@
 2. 使用旷湖SKILL平台在线 MCP：服务地址见本 README「接入 MCP 服务」，平台返回的地址优先。不部署本地 MCP，不索要 INTEGRATOR_ID / SECRET_ID / SECRET_KEY。
 3. 将完整 handaas-token 作为环境变量 `RECRUITMENT_MCP_TOKEN` 注入运行 Python 的进程，并设置 `RECRUITMENT_MCP_URL`；环境变量必须真正到达该进程，只保存文件或在别的终端 export 不算完成。
 4. Token 原样保留逗号等字符：不拆分、不解码、不放进 URL、不手动加 Bearer。不要把 Token 写入仓库、SKILL.md、README、示例配置、报告或终端历史；若只能使用仓库外的私有环境文件，权限设为 0600，并由启动器显式加载。不要回显 Token、请求头或原始鉴权错误；Token 注意保管，请勿泄露。
-5. 正式执行真实查询：加 --live 生成 HTML / Markdown / JSON 报告；按问题范围使用默认页数预算，不为填模板扩大调用，也不重复请求。
+5. 正式执行真实查询：加 --live 生成 HTML / Markdown / JSON 报告；按问题范围使用默认页数预算，不为填模板扩大调用，也不重复请求。生成含图表的 HTML / PDF 报告需要 Node.js（推荐当前 LTS，无需 npm 包）：依赖检查阶段用安全可用的工具检查并在缺失时补齐 Node，不产生付费调用；查看已生成的 HTML 不需要 Node / 服务器 / 网络。
 6. 只返回脱敏结果：安装目录、私有配置位置、真实查询调用次数与数据范围、报告路径。缺少地址或 Token 时明确说明缺失项，不要把连接失败说成企业没有数据。
 
 handaas-token：<在此粘贴本人在旷湖SKILL平台获取的完整 Token>
@@ -47,7 +47,7 @@ Token 只放在运行进程的环境变量或仓库外的私有配置中；用�
 
 ### 智能体安装约定
 
-1. 先读 `SKILL.md`，依当前智能体规范安装 Skill 和 Python 依赖；以实际包含 `SKILL.md` 的目录为安装根，不假设另有同名子目录，不默认全局注册，不覆盖已有配置。
+1. 先读 `SKILL.md`，依当前智能体规范安装 Skill 和 Python 依赖；生成含图表的 HTML / PDF 报告另需 Node.js（推荐当前 LTS，无需 npm 包），安装验收时用安全可用的工具检查并在缺失时补齐。以实际包含 `SKILL.md` 的目录为安装根，不假设另有同名子目录，不默认全局注册，不覆盖已有配置。
 2. 使用平台创建的招聘在线 MCP，地址见下文“接入 MCP 服务”；平台返回不同地址时以平台为准。在线安装不克隆上游 MCP 仓库、不启动本地服务，不索要 `INTEGRATOR_ID`、`SECRET_ID` 或 `SECRET_KEY`。
 3. 将完整 `handaas-token` 保存到本机智能体私有密钥或环境配置，并作为 `RECRUITMENT_MCP_TOKEN` 注入运行 Python 的进程；同时注入 `RECRUITMENT_MCP_URL`。若只能用仓库外私有环境文件，须由启动器显式加载，POSIX 权限设为 `0600`、Windows 限当前用户读取。无法安全持久化时说明缺失能力，不能宣称完成。
 4. Token 中的逗号等字符原样保留，不拆分、不解码、不放进 URL，也不手动加 `Bearer`。旷湖官方域名由客户端在运行时以 `token` 查询参数携带；私有网关才使用 `Authorization: Bearer`。本 Skill 只读取自己的 `RECRUITMENT_MCP_TOKEN`；不要配置共享 Token。不要把单服务地址设置成供其他领域复用的 `RECRUITMENT_MCP_URL`。
@@ -65,6 +65,7 @@ cd recruitment-skill
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+# 生成含图表的 HTML 还需要 Node.js（推荐当前 LTS），检查：node --version
 
 python scripts/compose_report.py \
   --enterprise "广州探迹科技有限公司" \
@@ -74,7 +75,7 @@ python scripts/compose_report.py \
   --report-output output/salary.html
 ```
 
-命令同时生成 `output/salary.json`、`output/salary.html` 和 `output/salary.md`。报告会明确标记为虚构样例；它只验证本地编排与渲染，不证明企业的真实招聘数据。
+命令同时生成 `output/salary.json`、`output/salary.html` 和 `output/salary.md`；生成含图表的 HTML 需要 Node.js（推荐当前 LTS，无需 npm 包），Markdown 输出不需要 Node。报告会明确标记为虚构样例；它只验证本地编排与渲染，不证明企业的真实招聘数据。
 
 ## 问题驱动的报告
 
@@ -285,11 +286,19 @@ python scripts/compose_report.py \
 
 | 文件 | 说明 |
 | --- | --- |
-| `output/jobs.html` | 可分享的研究报告，含统一 CSS 与图表 |
-| `output/jobs.md` | 与 HTML 同内容的 Markdown |
+| `output/jobs.html` | 可分享的研究报告，含统一 CSS 与图表；直接打开无需 Node / 服务器 / 网络，图表先显示内嵌静态 SVG，允许 JavaScript 时增强交互 |
+| `output/jobs.md` | 与 HTML 同内容的 Markdown（生成不需要 Node.js） |
 | `output/jobs.json` | 结构化报告和问题 / 口径元数据 |
 
-如已安装 Playwright 和 Chromium，可额外传 `--pdf-output output/jobs.pdf`。
+如已安装 Playwright 和 Chromium，可额外传 `--pdf-output output/jobs.pdf`；生成含图表的 HTML / PDF 另需 Node.js（推荐当前 LTS，无需 npm 包）。
+
+HTML 打开时先显示生成期内嵌的静态 SVG 图表，无需 JavaScript；允许 JavaScript 时再以 ECharts 增强 tooltip、图例等交互，交互失败仍保留静态图表。静态优先渲染不保证会剥离 SVG / 图片或只展示 HTML 源码的平台能显示图表。
+
+### 内容整理与语义审校
+
+招聘页面的“福利”字段可能混入薪资、任职条件、企业宣传、技术词或纯数字。新 compose 输出会保留原文与逐项依据，明确福利、薪酬、条件、描述和待核验项分开；不把标签数当成全员福利数。智能体按 `SKILL.md` 逐项做语义判断，再用 `scripts/organize_report.py` 将来源绑定的审校结果应用到新的 JSON / HTML / Markdown。格式与离线命令见 [报告输出约定](references/report-output.md#福利字段整理与语义审校)。
+
+仅重渲染 HTML 不等于完成内容审校；整理不查询 MCP，不改写原始查询时间和冻结证据。
 
 ### 重渲染已有 JSON
 
@@ -376,6 +385,8 @@ python scripts/mcp_client.py ping
 这是主体安全边界，不是“无招聘”。先取得企业全称或企业标识，再使用匹配的 `--keyword-type` 重试。
 
 ### PDF 导出不可用
+
+PDF 导出需要 Playwright + Chromium；生成含图表的 HTML / PDF 还要求本机 Node.js（推荐当前 LTS，无需 npm 包），缺失时报告生成会明确报错，不会输出空白图表。查看已生成的 HTML 不需要 Node。
 
 ```bash
 pip install playwright

@@ -24,6 +24,7 @@ import sys
 from typing import Any, Dict, List, Mapping, Sequence
 
 from common import json_dumps
+from static_charts import embed_static_charts
 
 
 # --------------------------------------------------------------------------- #
@@ -73,6 +74,31 @@ def compact(value: Any, limit: int = 0) -> str:
     if limit and len(t) > limit:
         return t[: limit - 1].rstrip() + "…"
     return t
+
+
+def tag_items(value: Any) -> List[str]:
+    """Readable, exact-deduplicated labels; never serialize a list as prose."""
+    if value is None or value == "":
+        return []
+    if isinstance(value, str) and value.strip().startswith("["):
+        try:
+            decoded = json.loads(value)
+        except ValueError:
+            decoded = value
+        if isinstance(decoded, list):
+            value = decoded
+    if isinstance(value, (list, tuple)):
+        items = [label for item in value for label in tag_items(item)]
+    elif isinstance(value, dict):
+        readable = next((value[key] for key in ("name", "label", "text", "title")
+                         if isinstance(value.get(key), str)), None)
+        items = tag_items(readable) if readable is not None else [
+            f"{key}：{'、'.join(tag_items(item))}" for key, item in value.items()
+            if item not in (None, "", [], {})
+        ]
+    else:
+        items = [" ".join(str(value).split())]
+    return list(dict.fromkeys(item for item in items if item and item != "-"))
 
 
 def infer_title(data: Mapping[str, Any], explicit: str | None = None) -> str:
@@ -213,7 +239,8 @@ def render_metrics(metrics: Sequence[Any]) -> str:
                 tag_html = f'<span class="m-tag t-down">{esc(d)}</span>'
             else:
                 tag_html = f'<span class="m-tag t-neutral">{esc(d)}</span>'
-        cells.append(f'<div class="biz-metric"><span class="m-name">{label}</span>{tag_html}<span class="m-value">{val}</span></div>')
+        hint_html = f'<span class="m-hint">{esc(m["hint"])}</span>' if m.get("hint") else ""
+        cells.append(f'<div class="biz-metric"><span class="m-name">{label}</span>{tag_html}<span class="m-value">{val}</span>{hint_html}</div>')
     remainder = len(cells) % 4
     if remainder:
         for _ in range(4 - remainder):
@@ -265,8 +292,15 @@ def _load_echarts() -> str:
     return javascript
 
 
-# The dependency and DOM can become ready in either order. Retry with a bound,
-# recover on script load, and initialize every canvas at most once.
+# Static-first lifecycle: every .chart-canvas sits inside a .chart-frame whose
+# .chart-static holds a pre-rendered SVG (visible without JS). This bootstrap
+# upgrades the hidden-but-sized canvas overlay to the interactive ECharts
+# layer. The dependency, DOM and option factory (CHART_OPTIONS_JS, injected by
+# embed_static_charts) can become ready in either order: retry with a bound,
+# recover on script load, initialize every canvas at most once, and only reveal
+# the interactive layer after real SVG geometry exists. Any failure keeps the
+# static SVG visible and sets a concise frame status; print always shows the
+# static layer.
 _HANDAAS_CHART_JS = r"""
 (function(){
   if(window.__handaas_boot_charts){window.__handaas_boot_charts();return;}
@@ -274,8 +308,10 @@ _HANDAAS_CHART_JS = r"""
   var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
   var timer=null, retries=0, MAX_RETRIES=100;
   var layoutRetries=0, MAX_LAYOUT_RETRIES=50;
-  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  var MSG_LOADING='图表库正在加载，数据明细仍可查看。';
+  var MSG_MISSING='图表交互不可用，已保留静态图表，数据明细仍可查看。';
+  var MSG_LAYOUT='图表等待布局完成后渲染，数据明细仍可查看。';
+  var MSG_FAILED='图表交互初始化失败，已保留静态图表，数据明细仍可查看。';
   function summarize(nodes){
     status.total=nodes.length;status.ready=0;status.failed=0;
     nodes.forEach(function(el){
@@ -285,18 +321,40 @@ _HANDAAS_CHART_JS = r"""
     status.state=status.ready===status.total?'ready':
       (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
   }
+  function frameOf(el){
+    var p=el.parentElement;
+    if(p&&(' '+p.className+' ').indexOf(' chart-frame ')>-1){return p;}
+    return null;
+  }
+  function setStatus(el,msg){
+    var f=frameOf(el);
+    if(f){
+      var p=f.querySelector('.chart-status');
+      if(p){p.textContent=msg;}
+    }else{
+      el.textContent=msg;
+    }
+  }
   function raf(fn){if(window.requestAnimationFrame){window.requestAnimationFrame(fn);}else{fn();}}
+  function hasGeometry(chart,el){
+    if(!chart || chart.getWidth()<2 || chart.getHeight()<2){return false;}
+    var svg=el.querySelector('svg');
+    if(!svg){return false;}
+    return !!svg.querySelector('path,rect,circle,line,text,polygon,polyline');
+  }
   function boot(){
     if(document.readyState==='loading'){return;}
     var nodes=document.querySelectorAll('.chart-canvas');
     if(!nodes.length){summarize(nodes);return;}
-    if(!window.echarts || typeof window.echarts.init!=='function'){
+    if(!window.echarts || typeof window.echarts.init!=='function' || typeof window.handaasChartOption!=='function'){
       var exhausted=retries>=MAX_RETRIES;
       nodes.forEach(function(el){
         if(el.__handaas_chart_ready){return;}
         el.__handaas_dependency_error=true;
         el.setAttribute('data-chart-state',exhausted?'error':'waiting');
-        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+        setStatus(el,exhausted?MSG_MISSING:MSG_LOADING);
+        var f=frameOf(el);
+        if(f){f.setAttribute('data-chart-state',exhausted?'error':'static');}
       });
       summarize(nodes);
       if(!exhausted && timer===null){
@@ -309,6 +367,7 @@ _HANDAAS_CHART_JS = r"""
     var pendingLayout=0;
     nodes.forEach(function(el){
       if(el.__handaas_chart_ready){return;}
+      var f=frameOf(el);
       if(el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error){return;}
       if(window.ResizeObserver && !el.__handaas_resize_observer){
         el.__handaas_resize_observer=new ResizeObserver(function(){
@@ -320,7 +379,8 @@ _HANDAAS_CHART_JS = r"""
       }
       if((el.getClientRects && el.getClientRects().length===0) || el.clientWidth<2 || el.clientHeight<2){
         el.setAttribute('data-chart-state','waiting');
-        el.textContent='图表等待布局完成后渲染，数据明细仍可查看。';
+        setStatus(el,MSG_LAYOUT);
+        if(f){f.setAttribute('data-chart-state','static');}
         pendingLayout++;
         return;
       }
@@ -330,46 +390,36 @@ _HANDAAS_CHART_JS = r"""
         if(!raw){throw new Error('Missing chart configuration');}
         // getAttribute already decodes HTML entities; a second decode corrupts labels.
         var spec=JSON.parse(raw);
-        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        var opt=window.handaasChartOption(spec);
+        if(!opt){throw new Error('Unsupported chart type');}
         el.textContent='';
         chart=window.echarts.init(el,null,{renderer:'svg'});
-      var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
-      if(spec.type==='line'){
-        opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
-        opt.yAxis={type:'value'};
-        opt.series=spec.series.map(function(s){return{name:s.name,type:'line',smooth:true,areaStyle: spec.area?{opacity:0.18}:undefined,stack: spec.stack?s.name:undefined,data:s.data,label:{show:true,position:'top',fontSize:11}};});
-        if(spec.stack){opt.tooltip={trigger:'axis'};}
-      }else if(spec.type==='bar'){
-        var horiz=spec.orient==='h';
-        var cats=spec.names, vals=spec.values;
-        if(horiz){opt.yAxis={type:'category',data:cats,axisLabel:{fontSize:11}};opt.xAxis={type:'value'};opt.grid={left:120,right:30,top:20,bottom:30};}
-        else{opt.xAxis={type:'category',data:cats,axisLabel:{fontSize:11,interval:0,rotate: cats&&cats.length>6?35:0}};opt.yAxis={type:'value'};}
-        opt.series=[{type:'bar',data:vals,itemStyle:{color:PALETTE[0]},label:{show:true,position: horiz?'right':'top',fontSize:11},barMaxWidth:42}];
-        opt.tooltip={trigger:'axis',axisPointer:{type:'shadow'}};
-      }else if(spec.type==='pie'){
-        opt.series=[{type:'pie',radius: spec.donut?['42%','68%']:'68%',center:['50%','55%'],data:spec.data,itemStyle:{borderColor:'#fff',borderWidth:2},label:{fontSize:11,formatter:'{b}: {c} ({d}%)'}}];
-        opt.legend={bottom:0,textStyle:{fontSize:11}};
-        opt.tooltip={trigger:'item',formatter:'{b}: {c} ({d}%)'};
-      }else if(spec.type==='gauge'){
-        var v=spec.value, mx=spec.max||100;
-        var col=v/mx>0.66?'#dc2626':(v/mx>0.33?'#d97706':'#059669');
-        opt.series=[{type:'gauge',min:0,max:mx,progress:{show:true,width:14,itemStyle:{color:col}},axisLine:{lineStyle:{width:14}},axisTick:{show:false},splitLine:{length:8,lineStyle:{color:'#fff'}},pointer:{width:5},detail:{valueAnimation:true,formatter:'{value}',fontSize:28,color:col,offsetCenter:[0,'30%']},data:[{value:v,name:spec.level||''}],title:{fontSize:13,color:'#475569',offsetCenter:[0,'62%']}}];
-      }else if(spec.type==='radar'){
-        opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
-        opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
-      }
         chart.setOption(opt);
+        // Real synchronous flush: setOption already flushes internally, but
+        // drive the zrender painter once more before the geometry gate. Any
+        // throw here falls into catch and keeps the static SVG.
+        var zr=chart.getZr();
+        if(zr && typeof zr.flush==='function'){zr.flush();}
+        // Never reveal the interactive layer (and never hide the static SVG)
+        // before real SVG geometry exists on the canvas overlay.
+        if(!hasGeometry(chart,el)){throw new Error('Empty chart geometry');}
         el.__handaas_chart=chart;
         el.__handaas_chart_ready=true;
         el.__handaas_dependency_error=false;
         el.setAttribute('data-chart-state','ready');
         window.__echarts_instances.push(chart);
+        if(f){
+          f.setAttribute('data-chart-state','ready');
+          var p=f.querySelector('.chart-status');
+          if(p){p.textContent='';}
+        }
         raf(function(){try{chart.resize();}catch(ignored){}});
       }catch(e){
         if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
         el.__handaas_dependency_error=false;
         el.setAttribute('data-chart-state','error');
-        el.textContent='图表绘制失败，请查看数据明细。';
+        setStatus(el,MSG_FAILED);
+        if(f){f.setAttribute('data-chart-state','error');}
       }
     });
     summarize(nodes);
@@ -534,16 +584,17 @@ def _render_one_section(core: Mapping[str, Any], spec: Mapping[str, Any]) -> str
     if kind == "text":
         if not compact(body):
             return ""
-        return f'{title_html}<p class="biz-summary">{esc(compact(body, limit=1500))}</p>'
+        return f'{title_html}{note}<p class="biz-summary">{esc(compact(body, limit=1500))}</p>'
     elif kind == "tags":
-        joined = compact(body, limit=400)
-        if not joined:
+        items = tag_items(body)
+        if not items:
             return ""
-        return f'{title_html}<div class="tag-row">{esc(joined)}</div>'
+        labels = "".join(f"<li>{esc(item)}</li>" for item in items)
+        return f'{title_html}{note}<ul class="tag-row">{labels}</ul>'
     elif kind == "kv":
         if not isinstance(body, dict) or not body:
             return ""
-        return f'{title_html}{render_info_list(body)}'
+        return f'{title_html}{note}{render_info_list(body)}'
     elif kind in ("line", "bar", "pie", "donut", "multi_line"):
         rows = [r for r in as_list(body) if isinstance(r, dict)]
         if not rows:
@@ -776,11 +827,12 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
                 cards.append(f'<div class="finding-card"><p class="f-label">{feature}</p><p class="f-text">{text}</p></div>')
         if cards:
             findings_html = f'<div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid">{"".join(cards)}</div></div>'
-    # --- Cover page enrichment: dimensions, scope, supplementary metrics ---
-    import re as _re_sup
+    # --- Cover page enrichment: populated dimensions and source scope ---
 
     # 1) Analysis dimensions from section titles
-    _dim_titles = [s.get("title", "") for s in sections if s.get("title")]
+    _dim_titles = [s.get("title", "") for s in sections
+                   if s.get("title") and core.get(s.get("key")) not in (None, "", [], {})
+                   and (s.get("kind") != "tags" or tag_items(core.get(s.get("key"))))]
     _dim_tags = "".join(f'<span class="dim-tag">{esc(t)}</span>' for t in _dim_titles) if _dim_titles else ""
     dimensions_html = ""
     if _dim_tags:
@@ -796,64 +848,6 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     if _scope_parts:
         _scope_items = "".join(f'<span class="scope-item"><em>{esc(label)}</em>{esc(v)}</span>' for label, v in _scope_parts)
         scope_bar_html = f'<div class="cover-scope-bar">{_scope_items}</div>'
-
-    # 3) Supplementary metrics from insight evidence (only when sparse)
-    _valid_metric_count = len([m for m in metrics if m.get("value", "-") != "-"])
-    if _valid_metric_count < 6 and insights:
-        _existing_lower = set()
-        _existing_vals = set()
-        for m in metrics:
-            _existing_lower.add(m.get("label", "").lower())
-            v = str(m.get("value", ""))
-            _existing_vals.add(v.replace(",", "").replace(" ", ""))
-        _supplementary = []
-        for ins in insights:
-            feature = ins.get("feature", "")
-            evidence = ins.get("evidence", "")
-            if not feature or not evidence:
-                continue
-            _feat_lower = feature.lower()
-            if any(_feat_lower in lbl or lbl in _feat_lower for lbl in _existing_lower):
-                continue
-            _val = None
-            # Try percentage first (e.g., "占比约 31%", "合计 62%（CR3）")
-            _pct_match = _re_sup.search(r'(\d+(?:\.\d+)?)\s*%', evidence)
-            if _pct_match:
-                _val = f"{_pct_match.group(1)}%"
-            else:
-                _num_match = _re_sup.search(r'(\d[\d,]*(?:\.\d+)?)\s*(件|个|家|条|人|轮|次|项|场)', evidence)
-                if _num_match:
-                    _raw = _num_match.group(1).replace(",", "")
-                    try:
-                        _num = float(_raw)
-                        if _num == int(_num):
-                            _num = int(_num)
-                        if isinstance(_num, int) and _num >= 1000:
-                            _val = f"{_num:,}"
-                        elif isinstance(_num, float):
-                            _val = f"{_num:.1f}"
-                        else:
-                            _val = str(_num)
-                        if _num_match.group(2):
-                            _val += f" {_num_match.group(2)}"
-                    except ValueError:
-                        pass
-            if not _val:
-                continue
-            # Skip if value duplicates an existing metric value
-            _val_clean = _val.replace(",", "").replace(" ", "").replace("%", "")
-            if _val_clean in _existing_vals:
-                continue
-            _short_label = feature[:10] if len(feature) > 10 else feature
-            _supplementary.append({"label": _short_label, "value": _val, "hint": ""})
-            _existing_lower.add(_feat_lower)
-            _existing_vals.add(_val_clean)
-            if len(_supplementary) >= 4:
-                break
-        if _supplementary:
-            metrics = list(metrics) + _supplementary
-
-
 
     core_html = render_core_analysis_html(core, sections)
 
@@ -876,7 +870,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
             f'</section>'
         )
 
-    return f"""<!doctype html>
+    document = f"""<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -915,6 +909,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
     .biz-metric .m-tag.t-down {{ color:#dc2626; }}
     .biz-metric .m-tag.t-neutral {{ color:#6366f1; }}
     .biz-metric .m-value {{ color:#0b3768; font-size:26px; line-height:1.1; font-weight:900; letter-spacing:-.02em; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; margin-top:auto; }}
+    .biz-metric .m-hint {{ color:#64748b; font-size:11px; line-height:1.5; margin-top:6px; text-align:left; }}
     .biz-metric .m-value .m-tag.t-up {{ color:#16a34a; }}
     .biz-metric .m-value .m-tag.t-down {{ color:#dc2626; }}
     .biz-metric .m-value .m-tag.t-neutral {{ color:#6366f1; }}
@@ -1083,6 +1078,7 @@ def render_html(data: Dict[str, Any], *, sections: Sequence[Mapping[str, Any]] |
 </body>
 </html>
 """
+    return embed_static_charts(document, ECHARTS_VENDOR_PATH)
 
 
 # --------------------------------------------------------------------------- #
@@ -1143,13 +1139,21 @@ def render_markdown(data: Dict[str, Any]) -> str:
         if kind == "text":
             if compact(body):
                 lines.append(f"### {spec.get('title', key)}\n")
+                if spec.get("note"):
+                    lines.append(f"_{spec['note']}_\n")
                 lines.append(f"{compact(body, limit=1500)}\n")
         elif kind == "tags":
-            if compact(body):
+            items = tag_items(body)
+            if items:
                 lines.append(f"### {spec.get('title', key)}\n")
-                lines.append(f"{compact(body, limit=400)}\n")
+                if spec.get("note"):
+                    lines.append(f"_{spec['note']}_\n")
+                lines.extend(f"- {html.escape(item, quote=False)}" for item in items)
+                lines.append("")
         elif kind == "kv" and isinstance(body, dict) and body:
             lines.append(f"### {spec.get('title', key)}\n")
+            if spec.get("note"):
+                lines.append(f"_{spec['note']}_\n")
             lines.append("| 字段 | 内容 |")
             lines.append("| --- | --- |")
             for k, v in body.items():

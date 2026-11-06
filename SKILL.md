@@ -68,8 +68,18 @@ description: Use for generating a professional recruitment big-data report (招�
 2. **保留问题**：将用户原话传给 `--question`，并把明确城市 / 职位条件传给筛选参数。
 3. **先做调用计划**：选择时间窗、所需统计 / 明细、样本目标与预算。问题不明确时不补 90 天；默认只计划 1 页，无本地筛选的 N 条目标自动计算必要页数，显式 `--max-pages` 优先；本地筛选 / 全量需安排足够预算，不能把默认值当作满足全部需求。
 4. **按需且复用查询**：优先汇总；仅查询所需数据源，同产品、同主体与同筛选的已得结果跨章节复用，首页不重查。新增调用必须对应具体证据缺口。
-5. **生成同风格报告**：JSON 保持统一骨架，HTML / Markdown 共享同一内容和视觉规范。
+5. **先整理再出报告**：先执行下面的内容语义审校，再生成统一 JSON、HTML、Markdown；脚本成功与章节覆盖率不能代替内容合格。
 6. **返回口径**：说明真实查询或虚构样例、采集模式、目标 / 实得样本量、抓取页数、上游总量、实际日期跨度、未知日期数、完整性、停止原因及失败 / 空结果。
+
+- **渲染前置检查**：执行会产出含图表 HTML / PDF 的报告命令前，先验证 `node --version` 与本 skill 自带 `assets/vendor/echarts.min.js` 存在；内嵌静态 SVG 的生成需要 Node.js（推荐当前 LTS，无需 npm 包），缺失时报告生成明确报错。查看已生成的 HTML 与 Markdown 输出不需要 Node。
+
+## 内容整理与 AI 审校
+
+1. 读取实际报告中 `benefit_source_labels`（旧报告读取 `benefit_tags`）及岗位、日期、范围；不能把上游 `benefitList` 字段名当成“全部是福利”的证明。
+2. 逐项拆分并按含义归类：明确福利/工作安排、薪酬线索、任职条件、企业/岗位描述、待核验。`14薪` 不是福利；`16周岁以上` 是任职条件；`2012实验室`、`AI` 是描述；`25元的夜宵` 未说明补贴或自费，保留待核验。
+3. 仅合并语义和适用条件一致的表达，保留“起、最高、转正后”等限定和金额精度；不把数项福利扩写成全员承诺，不把招聘文案当成当前有效待遇。
+4. AI 对规则无法确定的片段做上下文判断，生成 `source_labels` + `decisions` 审校 JSON，每条含 `source_index`、真实 `fragment`、`category`、`reason`；不改写原金额/事实。类别与格式见 `references/report-output.md`。没有证据就留待核验，不能编造已完成审校。
+5. 用 `scripts/organize_report.py --input 原报告.json --review 审校.json --output output/content-quality-review/案例/report.json --report-output output/content-quality-review/案例/report.html` 应用决策；核查同名 Markdown 与浏览器成品，返回原文、规范分类、分流理由与剩余疑点。此步骤不查询 MCP，不覆盖原件。
 
 ## 脚本速查
 

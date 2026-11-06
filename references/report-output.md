@@ -8,7 +8,7 @@
 
 - `--output <path>`：JSON。
 - `--report-output <path>`：同时生成 HTML 和同名 Markdown。
-- `--pdf-output <path>`：可选 PDF，需要 Playwright + Chromium。
+- `--pdf-output <path>`：可选 PDF，需要 Playwright + Chromium；含图表的 HTML / PDF 生成另需 Node.js（推荐当前 LTS，无需 npm 包），查看已生成的 HTML 不需要 Node。
 - `render_report.py`：从已有 JSON 独立重渲染 HTML 或 Markdown，不重新调用 MCP。
 
 三种正文格式必须共享同一份报告数据。HTML 始终使用统一研究报告视觉：A4 风、灰色顶部条纹、蓝色报告横幅、左侧目录 / 范围侧栏、深蓝章节标题和表头、浅蓝斑马行、打印友好分页。不同问题只改变内容侧重，不改变视觉体系。
@@ -96,6 +96,45 @@ JSON 还应保留 `analysis_request`：
 5. 城市分布、职位名称分布、薪酬区间分布都必须标记为分页样本派生，并披露实得样本数与查询页数。
 6. 渠道列表无岗位数量时以 tags 呈现，不生成虚假的渠道分布柱状图或集中度。
 7. 职位检索 `total` 是职位记录数，不等同于趋势视图的当前招聘人数；即使数值相同也不互相替代。
+
+## 福利字段整理与语义审校
+
+`benefitList` 是来源字段，不是已核实福利清单。compose 会保留 `core_analysis.benefit_source_labels`，把明确短语拆分、去重、按含义分流：
+
+| 报告字段 | 含义 |
+| --- | --- |
+| `benefit_tags` | 明确福利与工作安排；来源文案线索，不保证全员或当前适用 |
+| `compensation_tags` | 月薪、年薪、奖金、发薪月数；不进入岗位薪酬分布或均值 |
+| `hiring_requirements` | 年龄、届别、驾龄等条件 |
+| `employer_descriptions` | 企业宣传、实验室、业务/岗位词；不作已核实企业事实 |
+| `unclassified_tags` | 含义、金额用途或适用条件不明，保留待核验 |
+| `benefit_label_evidence` | 每个来源索引、原文、片段、规范值、类别、理由及整理方式 |
+| `benefit_label_quality` | 原始项数、拆分片段数、规范福利项数、待核验项数、实际语义审校片段数；不是福利覆盖率 |
+
+规则只识别明确短语。AI 智能体需阅读实际原文与上下文，对本次标签填写审校文件；无证据不能把数字或技术词猜成福利，也不能去掉否定、资格条件或适用范围。文件必须引用本报告原始标签，示例如下（仅演示格式，不是企业事实）：
+
+```json
+{
+  "source_labels": ["14薪+法定节假日", "25元的夜宵"],
+  "decisions": [
+    {"source_index": 0, "fragment": "14薪", "category": "薪酬线索", "reason": "发薪月数，不是福利"},
+    {"source_index": 0, "fragment": "法定节假日", "category": "休假福利", "reason": "来源明确写出休假描述，未证明全员适用"},
+    {"source_index": 1, "fragment": "25元的夜宵", "category": "待核验", "reason": "未说明这是补贴额度还是餐品自费价格"}
+  ]
+}
+```
+
+合法类别：`保障福利`、`休假福利`、`生活福利`、`成长支持`、`工作安排`、`薪酬线索`、`任职条件`、`企业/岗位描述`、`待核验`。审校只能分类并说明理由，不能改原事实；错误来源索引、来源不匹配、重复决策及把含否定/条件描述批准成无条件福利都会拒绝。
+
+```bash
+python scripts/organize_report.py \
+  --input output/original/report.json \
+  --review output/content-quality-review/review.json \
+  --output output/content-quality-review/case/report.json \
+  --report-output output/content-quality-review/case/report.html
+```
+
+不提供 `--review` 时仅做规则整理，未确定项仍保留；不得宣称 AI 已审校。此命令只读取已有 JSON，生成新 JSON / HTML / Markdown，不查询 MCP、不改写原件。`data_source.content_revision` 保留原 JSON SHA-256、原查询时间、整理时间与是否应用审校；HTML/Markdown 使用同一份整理后 JSON。
 
 ## 主体口径
 

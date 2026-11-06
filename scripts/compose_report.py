@@ -28,6 +28,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 from common import REPORT_BANNER, REPORT_TYPE, call_tool_once, collect_detail_pages, json_dumps, load_json_file, paid_call_scope, print_json
 import mcp_client
 from render_report import render_html, render_markdown, html_to_pdf
+from benefits import benefit_sections, organize_benefits
 
 SAMPLE_PATH = pathlib.Path(__file__).resolve().parent.parent / "assets" / "report.example.json"
 
@@ -767,7 +768,9 @@ def build_core_analysis(trend: Any, profile: Any, demand_stats: Any, salary: Any
                 return [str(x) for x in v if x]
         return []
 
-    benefit_list = _first_list_str(p, ("benefitList", "welfareList")) or _first_list_str(ds, ("benefitList", "welfareList"))
+    benefit_source = next((src[key] for src in (p, ds) for key in ("benefitList", "welfareList")
+                           if src.get(key) not in (None, "", [])), [])
+    benefit_data = organize_benefits(benefit_source)
     city_list = _first_list_str(p, ("recruitingCities", "recruitingCityList")) or _first_list_str(ds, ("recruitingCities", "recruitingCityList"))
     source_list = _first_list_str(p, ("recruitingSources", "channelList")) or _first_list_str(ds, ("recruitingSources", "channelList"))
     type_list = _first_list_str(p, ("recruitingTypes",)) or _first_list_str(ds, ("recruitingTypes",))
@@ -786,8 +789,8 @@ def build_core_analysis(trend: Any, profile: Any, demand_stats: Any, salary: Any
     city_dedup = _dedup_keep(city_list)
     source_dedup = _dedup_keep(source_list)
     if city_dedup:
-        profile_kv["画像返回城市数"] = str(len(city_dedup))
-        profile_kv["主要城市"] = "、".join(city_dedup[:10]) + ("…" if len(city_dedup) > 10 else "")
+        profile_kv["画像地点标签数"] = str(len(city_dedup))
+        profile_kv["地点标签（前10项）"] = "、".join(city_dedup[:10]) + ("…" if len(city_dedup) > 10 else "")
     if source_dedup:
         profile_kv["招聘渠道数"] = str(len(source_dedup))
         profile_kv["主要渠道"] = "、".join(source_dedup[:10])
@@ -859,7 +862,6 @@ def build_core_analysis(trend: Any, profile: Any, demand_stats: Any, salary: Any
     # 渠道仅是列表，不能伪造每个渠道的岗位数或集中度。
     source_dist_rows = source_dedup
     # tags 段
-    benefit_tags = benefit_list
     position_tags = pos_kw
 
     demand_rows = []
@@ -921,9 +923,10 @@ def build_core_analysis(trend: Any, profile: Any, demand_stats: Any, salary: Any
         }
 
     sections = [
-        {"key": "employer_profile", "title": "雇主招聘画像", "kind": "kv"},
+        {"key": "employer_profile", "title": "雇主招聘画像", "kind": "kv",
+         "note": "地点字段可能包含别名、区县或地标，仅作来源标签，不视为去重行政城市数"},
         {"key": "demand_stats", "title": "招聘需求统计", "kind": "kv", "note": "基于招聘统计视图的企业级汇总"},
-        {"key": "benefit_tags", "title": "福利标签", "kind": "tags", "note": f"共 {len(benefit_tags)} 项福利标签"},
+        *benefit_sections(benefit_data),
         {"key": "position_keywords", "title": "岗位关键词", "kind": "tags", "note": "统计视图返回的关键词，不代表岗位数量排名"},
         {"key": "source_dist", "title": "招聘渠道", "kind": "tags", "note": "画像返回的渠道列表，不包含各渠道岗位数量"},
         {"key": "salary_dist", "title": "薪酬区间分布", "kind": "bar", "note": "按本次累计样本可解析的薪酬区间中点聚合，不代表全部岗位",
@@ -958,7 +961,7 @@ def build_core_analysis(trend: Any, profile: Any, demand_stats: Any, salary: Any
         "sections": sections,
         "employer_profile": profile_kv,
         "demand_stats": demand_kv,
-        "benefit_tags": benefit_tags,
+        **benefit_data,
         "position_keywords": position_tags,
         "source_dist": source_dist_rows,
         "salary_dist": salary_dist_rows,
@@ -981,6 +984,7 @@ def build_records(core: Mapping[str, Any]) -> List[Dict[str, Any]]:
         row = {
             "职位名称": item.get("职位名称") or item.get("职位") or "-",
             "城市": item.get("城市") or "-",
+            "发布日期": item.get("发布日期") or "-",
         }
         if "薪酬" in item:
             row["薪酬"] = item.get("薪酬") or "-"
@@ -1048,8 +1052,8 @@ def build_insights(subject: Mapping[str, Any], core: Mapping[str, Any], metrics:
     if benefits:
         insights.append({
             "feature": "画像福利标签",
-            "evidence": f"数据源福利标签字段返回 {len(benefits)} 项，包括{'、'.join(map(str, benefits[:3]))}。",
-            "interpretation": "标签按数据源原样展示，可能包含非福利描述，不保证适用于每个职位或仍然有效。",
+            "evidence": f"来源标签经拆分、去重与分类后，识别 {len(benefits)} 项福利/工作安排线索，包括{'、'.join(map(str, benefits[:3]))}。",
+            "interpretation": "薪资、任职条件和企业/岗位宣传已单列，不计入福利；保留原文与分类依据，不能推定全员享有或当前有效。",
         })
     keywords = core.get("position_keywords") or []
     if keywords:
@@ -1393,7 +1397,8 @@ def _select_core(core: Mapping[str, Any], plan: Mapping[str, Any]) -> Dict[str, 
         for topic in topics:
             relevant = {
                 "trend": ["trend_overview"],
-                "profile": ["employer_profile", "benefit_tags", "position_keywords", "source_dist"],
+                "profile": ["employer_profile", "benefit_tags", "compensation_tags", "hiring_requirements",
+                            "employer_descriptions", "unclassified_tags", "position_keywords", "source_dist"],
                 "demand": ["demand_details", "title_dist"] if plan["view"] == "details" else ["demand_stats", "position_keywords"],
                 "salary": ["salary_dist", "salary_records"],
                 "jobs": ["job_records"],
@@ -1413,12 +1418,17 @@ def _select_core(core: Mapping[str, Any], plan: Mapping[str, Any]) -> Dict[str, 
                 keys.append("seniority_dist")
     specs = {s["key"]: s for s in core.get("sections", [])}
     selected: Dict[str, Any] = {"sections": [dict(specs[k]) for k in keys if k in specs], **{k: core.get(k) for k in keys}}
+    if "benefit_tags" in keys:
+        for key in ("benefit_source_labels", "benefit_label_evidence", "benefit_label_quality"):
+            selected[key] = core.get(key)
     if "salary" not in topics and topics != ["full"] and isinstance(selected.get("trend_overview"), list):
         selected["trend_overview"] = [row for row in selected["trend_overview"] if row.get("指标") != "平均薪酬"]
     if "salary" in plan.get("excluded", []):
         selected["sections"] = [s for s in selected["sections"] if s["key"] not in ("salary_dist", "salary_records", "salary_by_city")]
         for key in ("salary_dist", "salary_records", "salary_by_city"):
             selected.pop(key, None)
+        selected.pop("compensation_tags", None)
+        selected["sections"] = [s for s in selected["sections"] if s["key"] != "compensation_tags"]
         for key in ("employer_profile", "demand_stats"):
             if isinstance(selected.get(key), dict):
                 selected[key] = {k: v for k, v in selected[key].items() if "薪酬" not in k and "薪资" not in k}
@@ -1456,8 +1466,9 @@ def _report_from_calls(subject: Mapping[str, Any], calls: Mapping[str, Any], pla
             prefix = "跨页累计" if any(info["pages_fetched"] > 1 for info in plan.get("pagination", {}).values()) else "本次累计"
             metrics.append({"label": label, "value": str(len(core.get(key) or [])), "hint": f"{prefix}取得并纳入分析的岗位记录数，不是企业岗位总数或实际在招人数"})
             break
-    if core.get("benefit_tags"):
-        metrics.append({"label": "画像福利标签数", "value": str(len(core["benefit_tags"])), "hint": "画像返回的福利标签数量"})
+    if core.get("benefit_source_labels"):
+        metrics.append({"label": "福利与工作安排项", "value": str(len(core.get("benefit_tags") or [])),
+                        "hint": "来源标签规范整理后的去重项数，不含薪酬、任职条件、宣传和待核验项；不代表全员福利数"})
     _derive_core_metrics(metrics, core)
     products = []
     if any(t in calls for t in (T_TREND, T_PROFILE)) or (T_DEMAND in calls and plan["view"] == "statistics"):
@@ -1465,6 +1476,8 @@ def _report_from_calls(subject: Mapping[str, Any], calls: Mapping[str, Any], pla
     if any(t in calls for t in (T_SALARY, T_JOB_SEARCH)) or (T_DEMAND in calls and plan["view"] == "details"):
         products.append(PRODUCT_DETAILS)
     report = _assemble(subject, core, metrics, dry_run=dry_run, plan=plan, products=products)
+    if core.get("benefit_label_quality"):
+        report["data_source"]["content_quality"] = dict(core["benefit_label_quality"])
     if not dry_run:
         _attach_call_status(report, {TOOL_LABELS[t]: p for t, p in calls.items()})
         failed = report["data_source"]["failed_products"]
