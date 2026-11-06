@@ -37,6 +37,7 @@
     .biz-metric .m-tag.t-down { color:#dc2626; }
     .biz-metric .m-tag.t-neutral { color:#6366f1; }
     .biz-metric .m-value { color:#0b3768; font-size:26px; line-height:1.1; font-weight:900; letter-spacing:-.02em; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; margin-top:auto; }
+    .biz-metric .m-hint { color:#64748b; font-size:11px; line-height:1.5; margin-top:6px; text-align:left; }
     .biz-metric .m-value .m-tag.t-up { color:#16a34a; }
     .biz-metric .m-value .m-tag.t-down { color:#dc2626; }
     .biz-metric .m-value .m-tag.t-neutral { color:#6366f1; }
@@ -165,7 +166,57 @@
     .glossary-term { display:flex; align-items:flex-start; padding:12px 14px; background:#f1f6fb; color:#0b5ca8; font-size:13px; font-weight:800; border-right:3px solid #0b5ca8; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; }
     .glossary-def { padding:12px 16px; color:#334155; font-size:13px; line-height:1.7; }
   </style>
-  <script>
+  <style>
+.chart-frame{position:relative;width:100%;height:300px;}
+.chart-box-gauge .chart-frame{height:240px;}
+.chart-static{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;}
+.chart-static svg{display:block;width:100%;height:100%;}
+.chart-frame .chart-canvas{position:absolute;top:0;left:0;width:100%;height:100% !important;visibility:hidden;z-index:1;}
+.chart-frame[data-chart-state="ready"] .chart-canvas{visibility:visible;}
+.chart-frame[data-chart-state="ready"] .chart-static{visibility:hidden;}
+.chart-frame .chart-status{position:absolute;left:0;right:0;bottom:0;margin:0;padding:2px 8px;font-size:11px;color:#64748b;text-align:center;background:rgba(255,255,255,.88);z-index:2;}
+.chart-frame .chart-status:empty{display:none;}
+@media print{
+  .chart-frame{height:auto;overflow:visible;}
+  .chart-frame .chart-canvas{display:none !important;visibility:hidden;}
+  .chart-frame .chart-static{position:static;display:block !important;visibility:visible !important;}
+  .chart-frame .chart-status{display:none;}
+  .chart-static svg{height:auto;}
+}
+</style>
+<script>function handaasChartOption(spec){
+  if(!spec || ['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){return null;}
+  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
+  var FONTS="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif";
+  var opt={animation:false,color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
+  if(spec.type==='line'){
+    opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
+    opt.yAxis={type:'value'};
+    opt.series=spec.series.map(function(s){return{name:s.name,type:'line',smooth:true,areaStyle: spec.area?{opacity:0.18}:undefined,stack: spec.stack?s.name:undefined,data:s.data,label:{show:true,position:'top',fontSize:11}};});
+    if(spec.stack){opt.tooltip={trigger:'axis'};}
+  }else if(spec.type==='bar'){
+    var horiz=spec.orient==='h';
+    var cats=spec.names, vals=spec.values;
+    if(horiz){opt.yAxis={type:'category',data:cats,axisLabel:{fontSize:11}};opt.xAxis={type:'value'};opt.grid={left:120,right:30,top:20,bottom:30};}
+    else{opt.xAxis={type:'category',data:cats,axisLabel:{fontSize:11,interval:0,rotate: cats&&cats.length>6?35:0}};opt.yAxis={type:'value'};}
+    opt.series=[{type:'bar',data:vals,itemStyle:{color:PALETTE[0]},label:{show:true,position: horiz?'right':'top',fontSize:11},barMaxWidth:42}];
+    opt.tooltip={trigger:'axis',axisPointer:{type:'shadow'}};
+  }else if(spec.type==='pie'){
+    opt.series=[{type:'pie',radius: spec.donut?['42%','68%']:'68%',center:['50%','55%'],data:spec.data,itemStyle:{borderColor:'#fff',borderWidth:2},label:{fontSize:11,formatter:'{b}: {c} ({d}%)'}}];
+    opt.legend={bottom:0,textStyle:{fontSize:11}};
+    opt.tooltip={trigger:'item',formatter:'{b}: {c} ({d}%)'};
+  }else if(spec.type==='gauge'){
+    var v=spec.value, mx=spec.max||100;
+    var col=v/mx>0.66?'#dc2626':(v/mx>0.33?'#d97706':'#059669');
+    opt.series=[{type:'gauge',min:0,max:mx,progress:{show:true,width:14,itemStyle:{color:col}},axisLine:{lineStyle:{width:14}},axisTick:{show:false},splitLine:{length:8,lineStyle:{color:'#fff'}},pointer:{width:5},detail:{valueAnimation:false,formatter:'{value}',fontSize:28,color:col,offsetCenter:[0,'30%']},data:[{value:v,name:spec.level||''}],title:{fontSize:13,color:'#475569',offsetCenter:[0,'62%']}}];
+  }else if(spec.type==='radar'){
+    opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
+    opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
+  }
+  return opt;
+}
+</script>
+<script>
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements.  See the NOTICE file
@@ -218,8 +269,10 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   var status=window.__handaas_chart_status={state:'waiting',total:0,ready:0,failed:0};
   var timer=null, retries=0, MAX_RETRIES=100;
   var layoutRetries=0, MAX_LAYOUT_RETRIES=50;
-  var PALETTE=['#0b5ca8','#0284c7','#0b3768','#d97706','#059669','#dc2626','#7c3aed','#db2777','#0891b2','#65a30d'];
-  var FONTS='-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif';
+  var MSG_LOADING='图表库正在加载，数据明细仍可查看。';
+  var MSG_MISSING='图表交互不可用，已保留静态图表，数据明细仍可查看。';
+  var MSG_LAYOUT='图表等待布局完成后渲染，数据明细仍可查看。';
+  var MSG_FAILED='图表交互初始化失败，已保留静态图表，数据明细仍可查看。';
   function summarize(nodes){
     status.total=nodes.length;status.ready=0;status.failed=0;
     nodes.forEach(function(el){
@@ -229,18 +282,40 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     status.state=status.ready===status.total?'ready':
       (status.ready+status.failed===status.total?(status.ready?'degraded':'error'):'waiting');
   }
+  function frameOf(el){
+    var p=el.parentElement;
+    if(p&&(' '+p.className+' ').indexOf(' chart-frame ')>-1){return p;}
+    return null;
+  }
+  function setStatus(el,msg){
+    var f=frameOf(el);
+    if(f){
+      var p=f.querySelector('.chart-status');
+      if(p){p.textContent=msg;}
+    }else{
+      el.textContent=msg;
+    }
+  }
   function raf(fn){if(window.requestAnimationFrame){window.requestAnimationFrame(fn);}else{fn();}}
+  function hasGeometry(chart,el){
+    if(!chart || chart.getWidth()<2 || chart.getHeight()<2){return false;}
+    var svg=el.querySelector('svg');
+    if(!svg){return false;}
+    return !!svg.querySelector('path,rect,circle,line,text,polygon,polyline');
+  }
   function boot(){
     if(document.readyState==='loading'){return;}
     var nodes=document.querySelectorAll('.chart-canvas');
     if(!nodes.length){summarize(nodes);return;}
-    if(!window.echarts || typeof window.echarts.init!=='function'){
+    if(!window.echarts || typeof window.echarts.init!=='function' || typeof window.handaasChartOption!=='function'){
       var exhausted=retries>=MAX_RETRIES;
       nodes.forEach(function(el){
         if(el.__handaas_chart_ready){return;}
         el.__handaas_dependency_error=true;
         el.setAttribute('data-chart-state',exhausted?'error':'waiting');
-        el.textContent=exhausted?'图表库加载失败或不可用，请查看数据明细或重新生成离线报告。':'图表库正在加载，数据明细仍可查看。';
+        setStatus(el,exhausted?MSG_MISSING:MSG_LOADING);
+        var f=frameOf(el);
+        if(f){f.setAttribute('data-chart-state',exhausted?'error':'static');}
       });
       summarize(nodes);
       if(!exhausted && timer===null){
@@ -253,6 +328,7 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
     var pendingLayout=0;
     nodes.forEach(function(el){
       if(el.__handaas_chart_ready){return;}
+      var f=frameOf(el);
       if(el.getAttribute('data-chart-state')==='error' && !el.__handaas_dependency_error){return;}
       if(window.ResizeObserver && !el.__handaas_resize_observer){
         el.__handaas_resize_observer=new ResizeObserver(function(){
@@ -264,7 +340,8 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
       }
       if((el.getClientRects && el.getClientRects().length===0) || el.clientWidth<2 || el.clientHeight<2){
         el.setAttribute('data-chart-state','waiting');
-        el.textContent='图表等待布局完成后渲染，数据明细仍可查看。';
+        setStatus(el,MSG_LAYOUT);
+        if(f){f.setAttribute('data-chart-state','static');}
         pendingLayout++;
         return;
       }
@@ -274,46 +351,36 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         if(!raw){throw new Error('Missing chart configuration');}
         // getAttribute already decodes HTML entities; a second decode corrupts labels.
         var spec=JSON.parse(raw);
-        if(['line','bar','pie','gauge','radar'].indexOf(spec.type)<0){throw new Error('Unsupported chart type');}
+        var opt=window.handaasChartOption(spec);
+        if(!opt){throw new Error('Unsupported chart type');}
         el.textContent='';
         chart=window.echarts.init(el,null,{renderer:'svg'});
-      var opt={color:PALETTE,tooltip:{trigger: spec.type==='pie'?'item':'axis'},textStyle:{fontFamily:FONTS,fontSize:12,color:'#334155'},grid:{left:48,right:24,top:30,bottom:40},legend:{top:0,textStyle:{fontSize:11}}};
-      if(spec.type==='line'){
-        opt.xAxis={type:'category',data:spec.x,axisLabel:{fontSize:11,interval:0,rotate: spec.x && spec.x.length>6?35:0}};
-        opt.yAxis={type:'value'};
-        opt.series=spec.series.map(function(s){return{name:s.name,type:'line',smooth:true,areaStyle: spec.area?{opacity:0.18}:undefined,stack: spec.stack?s.name:undefined,data:s.data,label:{show:true,position:'top',fontSize:11}};});
-        if(spec.stack){opt.tooltip={trigger:'axis'};}
-      }else if(spec.type==='bar'){
-        var horiz=spec.orient==='h';
-        var cats=spec.names, vals=spec.values;
-        if(horiz){opt.yAxis={type:'category',data:cats,axisLabel:{fontSize:11}};opt.xAxis={type:'value'};opt.grid={left:120,right:30,top:20,bottom:30};}
-        else{opt.xAxis={type:'category',data:cats,axisLabel:{fontSize:11,interval:0,rotate: cats&&cats.length>6?35:0}};opt.yAxis={type:'value'};}
-        opt.series=[{type:'bar',data:vals,itemStyle:{color:PALETTE[0]},label:{show:true,position: horiz?'right':'top',fontSize:11},barMaxWidth:42}];
-        opt.tooltip={trigger:'axis',axisPointer:{type:'shadow'}};
-      }else if(spec.type==='pie'){
-        opt.series=[{type:'pie',radius: spec.donut?['42%','68%']:'68%',center:['50%','55%'],data:spec.data,itemStyle:{borderColor:'#fff',borderWidth:2},label:{fontSize:11,formatter:'{b}: {c} ({d}%)'}}];
-        opt.legend={bottom:0,textStyle:{fontSize:11}};
-        opt.tooltip={trigger:'item',formatter:'{b}: {c} ({d}%)'};
-      }else if(spec.type==='gauge'){
-        var v=spec.value, mx=spec.max||100;
-        var col=v/mx>0.66?'#dc2626':(v/mx>0.33?'#d97706':'#059669');
-        opt.series=[{type:'gauge',min:0,max:mx,progress:{show:true,width:14,itemStyle:{color:col}},axisLine:{lineStyle:{width:14}},axisTick:{show:false},splitLine:{length:8,lineStyle:{color:'#fff'}},pointer:{width:5},detail:{valueAnimation:true,formatter:'{value}',fontSize:28,color:col,offsetCenter:[0,'30%']},data:[{value:v,name:spec.level||''}],title:{fontSize:13,color:'#475569',offsetCenter:[0,'62%']}}];
-      }else if(spec.type==='radar'){
-        opt.radar={indicator:spec.indicators,radius:'62%',axisName:{color:'#475569',fontSize:11},splitArea:{areaStyle:{color:['#f8fbff','#eef4fb']}}};
-        opt.series=[{type:'radar',areaStyle:{opacity:0.18},data:spec.series}];
-      }
         chart.setOption(opt);
+        // Real synchronous flush: setOption already flushes internally, but
+        // drive the zrender painter once more before the geometry gate. Any
+        // throw here falls into catch and keeps the static SVG.
+        var zr=chart.getZr();
+        if(zr && typeof zr.flush==='function'){zr.flush();}
+        // Never reveal the interactive layer (and never hide the static SVG)
+        // before real SVG geometry exists on the canvas overlay.
+        if(!hasGeometry(chart,el)){throw new Error('Empty chart geometry');}
         el.__handaas_chart=chart;
         el.__handaas_chart_ready=true;
         el.__handaas_dependency_error=false;
         el.setAttribute('data-chart-state','ready');
         window.__echarts_instances.push(chart);
+        if(f){
+          f.setAttribute('data-chart-state','ready');
+          var p=f.querySelector('.chart-status');
+          if(p){p.textContent='';}
+        }
         raf(function(){try{chart.resize();}catch(ignored){}});
       }catch(e){
         if(chart && typeof chart.dispose==='function'){try{chart.dispose();}catch(ignored){}}
         el.__handaas_dependency_error=false;
         el.setAttribute('data-chart-state','error');
-        el.textContent='图表绘制失败，请查看数据明细。';
+        setStatus(el,MSG_FAILED);
+        if(f){f.setAttribute('data-chart-state','error');}
       }
     });
     summarize(nodes);
@@ -363,10 +430,10 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
         <h1>华为技术有限公司 招聘大数据报告</h1>
         <p class="report-lead">本报告以“华为技术有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 6258.0、近三月招聘人数 6258.0、近三月岗位数 5337、平均更新频率 18409 秒、平均薪酬 11,960 元/月。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p>
         <div class="abstract-box">报告涵盖查询对象、数据总览、核心分析、代表性记录与结构洞察，所有数据均标注口径与来源。</div>
-        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">6258.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">6258.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">5337</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">18409 秒</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">11,960 元/月</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">174070 个</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">3</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div>
+        <div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">6258.0</span><span class="m-hint">当前在招岗位人数</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">6258.0</span><span class="m-hint">近三个月招聘人数</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">5337</span><span class="m-hint">近三月发布岗位数</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">18409 秒</span><span class="m-hint">岗位平均更新频率（上游单位：秒）</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">11,960 元/月</span><span class="m-hint">在招岗位平均薪酬（元/月）</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">174070 个</span><span class="m-hint">本次职位检索命中条数</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">3</span><span class="m-hint">本次返回明细样本覆盖的去重城市数，并非全部岗位城市总数</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span><span class="m-hint">前3大城市岗位集中度</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">1</span><span class="m-hint">薪酬分布区间数</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div>
         <ul class="exec-list"><li>该值仅表示数据源当前记录的招聘人数；需结合历史序列和人员净增减后再判断扩张状态。</li><li>近三月与当前口径可用于描述样本变化，但不能单独证明岗位补齐或业务扩张。</li><li>该分布仅描述已返回岗位样本的薪酬区间，不能据此推断整体岗位类型或团队结构。</li><li>该样本均值描述已返回岗位的薪酬区间，不代表整体人才竞争力或岗位结构。</li><li>城市集中度仅描述招聘样本分布，不能直接等同于企业业务地域重心。</li></ul>
         <div class="cover-findings"><h3 class="cover-findings-title">核心发现</h3><div class="cover-findings-grid"><div class="finding-card"><p class="f-label">招聘规模</p><p class="f-text">当前在招人数 6258.0。</p></div><div class="finding-card"><p class="f-label">近期招聘节奏</p><p class="f-text">近三月招聘 6258.0，为当前在招的 1.0x。</p></div><div class="finding-card"><p class="f-label">薪酬带集中度</p><p class="f-text">“20-30K”区间岗位占比约 100%。</p></div><div class="finding-card"><p class="f-label">薪酬水平</p><p class="f-text">样本岗位薪酬中位均值约 22K/月（n=1）。</p></div></div></div>
-        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">雇主招聘画像</span><span class="dim-tag">招聘需求统计</span><span class="dim-tag">福利标签</span><span class="dim-tag">岗位关键词</span><span class="dim-tag">招聘渠道分布</span><span class="dim-tag">薪酬区间分布</span><span class="dim-tag">招聘城市分布</span><span class="dim-tag">招聘趋势</span><span class="dim-tag">招聘数量口径核验</span><span class="dim-tag">职位薪酬明细</span><span class="dim-tag">招聘职位明细</span></div></div>
+        <div class="cover-dimensions"><span class="dim-label">分析维度</span><div class="dim-tags"><span class="dim-tag">雇主招聘画像</span><span class="dim-tag">招聘需求统计</span><span class="dim-tag">福利标签</span><span class="dim-tag">岗位关键词</span><span class="dim-tag">薪酬区间分布</span><span class="dim-tag">招聘城市分布</span><span class="dim-tag">招聘趋势</span><span class="dim-tag">招聘数量口径核验</span><span class="dim-tag">职位薪酬明细</span><span class="dim-tag">招聘职位明细</span></div></div>
         <div class="cover-scope-bar"><span class="scope-item"><em>数据产品</em>招聘明细、招聘统计</span><span class="scope-item"><em>覆盖范围</em>招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</span></div>
       </section>
     </div>
@@ -374,15 +441,87 @@ var Fr={},Gr={};var Wr,Hr=function(){function t(t,e,n){var i=this;this._sleepAft
   <main class="research-doc">
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>报告摘要</h2><p class="biz-section-note">概述分析对象、数据覆盖范围与核心发现。</p></div><span class="biz-tag">Summary</span></div><p class="biz-summary">本报告以“华为技术有限公司”为分析对象，基于招聘公开数据，系统呈现雇主招聘画像、招聘需求统计、招聘趋势、职位薪酬与招聘职位明细。关键指标包括：当前招聘人数 6258.0、近三月招聘人数 6258.0、近三月岗位数 5337、平均更新频率 18409 秒、平均薪酬 11,960 元/月。报告同时给出招聘规模、近期招聘节奏与薪酬水平的结构化解读，便于人才市场分析与组织扩张研究参考</p></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>查询对象与口径</h2><p class="biz-section-note">说明匹配对象、匹配方式与数据范围。</p></div><span class="biz-tag">Caliber</span></div><div class="info-list"><div class="info-row"><span class="info-label">匹配对象</span><span class="info-value">华为技术有限公司</span></div><div class="info-row"><span class="info-label">匹配方式</span><span class="info-value">招聘大数据按企业主体匹配（keywordType=name）；招聘 MCP 无模糊查询，需提供企业全称</span></div><div class="info-row"><span class="info-label">数据范围</span><span class="info-value">招聘趋势概览、雇主招聘画像、招聘需求分析、职位薪酬明细、招聘职位明细</span></div><div class="info-row"><span class="info-label">局限说明</span><span class="info-value">数据来自招聘公开数据；少量字段可能存在更新延迟。</span></div></div></section>
-    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">6258.0</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">6258.0</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">5337</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">18409 秒</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">11,960 元/月</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">174070 个</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">3</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">1</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div></section>
+    <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>数据总览</h2><p class="biz-section-note">关键指标一览。</p></div><span class="biz-tag">Metrics</span></div><div class="biz-metrics"><div class="biz-metric"><span class="m-name">当前招聘人数</span><span class="m-tag"></span><span class="m-value">6258.0</span><span class="m-hint">当前在招岗位人数</span></div><div class="biz-metric"><span class="m-name">近三月招聘人数</span><span class="m-tag t-neutral">为当前的 1.0x</span><span class="m-value">6258.0</span><span class="m-hint">近三个月招聘人数</span></div><div class="biz-metric"><span class="m-name">近三月岗位数</span><span class="m-tag"></span><span class="m-value">5337</span><span class="m-hint">近三月发布岗位数</span></div><div class="biz-metric"><span class="m-name">平均更新频率</span><span class="m-tag"></span><span class="m-value">18409 秒</span><span class="m-hint">岗位平均更新频率（上游单位：秒）</span></div><div class="biz-metric"><span class="m-name">平均薪酬</span><span class="m-tag"></span><span class="m-value">11,960 元/月</span><span class="m-hint">在招岗位平均薪酬（元/月）</span></div><div class="biz-metric"><span class="m-name">在招岗位数</span><span class="m-tag"></span><span class="m-value">174070 个</span><span class="m-hint">本次职位检索命中条数</span></div><div class="biz-metric"><span class="m-name">当前页样本城市数</span><span class="m-tag"></span><span class="m-value">3</span><span class="m-hint">本次返回明细样本覆盖的去重城市数，并非全部岗位城市总数</span></div><div class="biz-metric"><span class="m-name">城市CR3</span><span class="m-tag"></span><span class="m-value">100.0%</span><span class="m-hint">前3大城市岗位集中度</span></div><div class="biz-metric"><span class="m-name">薪酬区间数</span><span class="m-tag"></span><span class="m-value">1</span><span class="m-hint">薪酬分布区间数</span></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div><div class="biz-metric-empty"></div></div></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>核心分析</h2><p class="biz-section-note">按维度展开目标核心数据与结构化明细。</p></div><span class="biz-tag">Analysis</span></div><h3 class="biz-subsection-title">雇主招聘画像</h3><div class="info-list"><div class="info-row"><span class="info-label">当前招聘人数</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月招聘人数</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">5337</span></div><div class="info-row"><span class="info-label">岗位平均更新频率(秒)</span><span class="info-value">18409</span></div><div class="info-row"><span class="info-label">平均薪酬(元/月)</span><span class="info-value">11,960 元/月</span></div><div class="info-row"><span class="info-label">画像返回城市数</span><span class="info-value">50</span></div><div class="info-row"><span class="info-label">主要城市</span><span class="info-value">丁栅湿地、七台河市、三亚市、三明、三明市、三门峡市、上海、上海市、上饶市、东莞…</span></div><div class="info-row"><span class="info-label">用工类型</span><span class="info-value">全职、兼职、实习</span></div></div>
-<h3 class="biz-subsection-title">招聘需求统计</h3><div class="info-list"><div class="info-row"><span class="info-label">当前招聘规模</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月招聘规模</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">5337</span></div><div class="info-row"><span class="info-label">平均薪酬水平</span><span class="info-value">11,960 元/月</span></div><div class="info-row"><span class="info-label">业务关键词</span><span class="info-value">软件开发、测试、JAVA</span></div><div class="info-row"><span class="info-label">岗位关键词</span><span class="info-value">工程师、经理、高级工程师</span></div></div>
-<h3 class="biz-subsection-title">福利标签</h3><div class="tag-row">[ &quot;2012实验室&quot;, &quot;30万到50万年薪&quot;, &quot;14薪+法定节假日+节日礼品&quot;, &quot;2018互联网300强&quot;, &quot;25元的夜宵&quot;, &quot;16薪&quot;, &quot;16周岁以上&quot;, &quot;13薪&quot;, &quot;23年公司最佳PDU&quot;, &quot;14薪起&quot;, &quot;2019人工智能100强&quot;, &quot;123&quot;, &quot;111&quot;, &quot;2018中国出海品牌30强&quot;, &quot;2~4个月年终奖&quot;, &quot;2-4个月年终奖&quot;, &quot;14薪&quot;, &quot;0费用入职&quot;, &quot;14~16薪&quot;, &quot;2-4个月奖金&quot; ]</div>
-<h3 class="biz-subsection-title">岗位关键词</h3><div class="tag-row">[ &quot;工程师&quot;, &quot;经理&quot;, &quot;高级工程师&quot; ]</div>
-<p class="biz-section-note">按月薪区间聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">薪酬区间分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;v&quot;,&quot;names&quot;:[&quot;20-30K&quot;],&quot;values&quot;:[1.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>薪酬区间</th><th>岗位数</th></tr></thead><tbody><tr><td>20-30K</td><td>1</td></tr></tbody></table></div></details></div>
-<p class="biz-section-note">按城市聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">招聘城市分布</h4><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;h&quot;,&quot;names&quot;:[&quot;东莞市&quot;,&quot;贵阳市&quot;,&quot;宣城市&quot;],&quot;values&quot;:[4.0,2.0,1.0]}"></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>城市</th><th>岗位数</th></tr></thead><tbody><tr><td>东莞市</td><td>4</td></tr><tr><td>贵阳市</td><td>2</td></tr><tr><td>宣城市</td><td>1</td></tr></tbody></table></div></details></div>
+<h3 class="biz-subsection-title">招聘需求统计</h3><p class="biz-section-note">基于招聘统计视图的企业级汇总</p><div class="info-list"><div class="info-row"><span class="info-label">当前招聘规模</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月招聘规模</span><span class="info-value">6258.0</span></div><div class="info-row"><span class="info-label">近三月岗位数</span><span class="info-value">5337</span></div><div class="info-row"><span class="info-label">平均薪酬水平</span><span class="info-value">11,960 元/月</span></div><div class="info-row"><span class="info-label">业务关键词</span><span class="info-value">软件开发、测试、JAVA</span></div><div class="info-row"><span class="info-label">岗位关键词</span><span class="info-value">工程师、经理、高级工程师</span></div></div>
+<h3 class="biz-subsection-title">福利标签</h3><p class="biz-section-note">共 20 项福利标签</p><ul class="tag-row"><li>2012实验室</li><li>30万到50万年薪</li><li>14薪+法定节假日+节日礼品</li><li>2018互联网300强</li><li>25元的夜宵</li><li>16薪</li><li>16周岁以上</li><li>13薪</li><li>23年公司最佳PDU</li><li>14薪起</li><li>2019人工智能100强</li><li>123</li><li>111</li><li>2018中国出海品牌30强</li><li>2~4个月年终奖</li><li>2-4个月年终奖</li><li>14薪</li><li>0费用入职</li><li>14~16薪</li><li>2-4个月奖金</li></ul>
+<h3 class="biz-subsection-title">岗位关键词</h3><p class="biz-section-note">高频岗位关键词（如工程师/经理等）</p><ul class="tag-row"><li>工程师</li><li>经理</li><li>高级工程师</li></ul>
+<p class="biz-section-note">按月薪区间聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">薪酬区间分布</h4><div class="chart-frame" data-chart-state="static"><div class="chart-static"><svg width="984" height="300" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 984 300">
+<rect width="984" height="300" x="0" y="0" fill="none"></rect>
+<path d="M48 260.5L960 260.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 214.5L960 214.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 168.5L960 168.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 122.5L960 122.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 76.5L960 76.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 30.5L960 30.5" fill="transparent" stroke="#E0E6F1" class="zr0-cls-0"></path>
+<path d="M48 260.5L960 260.5" fill="transparent" stroke="#6E7079" stroke-linecap="round" class="zr0-cls-0"></path>
+<path d="M48.5 260L48.5 265" fill="transparent" stroke="#6E7079" class="zr0-cls-0"></path>
+<path d="M960.5 260L960.5 265" fill="transparent" stroke="#6E7079" class="zr0-cls-0"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 260)" fill="#334155">0</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 214)" fill="#334155">0.2</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 168)" fill="#334155">0.4</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 122)" fill="#334155">0.6</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 76)" fill="#334155">0.8</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(40 30)" fill="#334155">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="5.5" transform="translate(504 268)" fill="#334155">20-30K</text>
+<path d="M483 260l42 0l0 -230l-42 0Z" fill="#0b5ca8" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr0-cls-1"></path>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="-5.5" transform="translate(504 25)" fill="#333" stroke="rgb(255,255,255)" stroke-width="2" paint-order="stroke" stroke-miterlimit="2">1</text>
+<path d="M-5 -5l10 0l0 10l-10 0Z" transform="translate(492 5)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#ccc" stroke-width="0" class="zr0-cls-0"></path>
+<style ><![CDATA[
+.zr0-cls-0:hover {
+pointer-events:none;
+}
+.zr0-cls-1:hover {
+cursor:pointer;
+fill:rgba(12,101,184,1);
+}
+
+]]>
+
+</style>
+</svg></div><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;v&quot;,&quot;names&quot;:[&quot;20-30K&quot;],&quot;values&quot;:[1.0]}"></div><p class="chart-status" aria-live="polite"></p></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>薪酬区间</th><th>岗位数</th></tr></thead><tbody><tr><td>20-30K</td><td>1</td></tr></tbody></table></div></details></div>
+<p class="biz-section-note">按城市聚合在招岗位数量</p><div class="chart-box"><h4 class="chart-title">招聘城市分布</h4><div class="chart-frame" data-chart-state="static"><div class="chart-static"><svg width="984" height="300" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="full" viewBox="0 0 984 300">
+<rect width="984" height="300" x="0" y="0" fill="none"></rect>
+<path d="M120.5 20L120.5 270" fill="transparent" stroke="#E0E6F1" class="zr1-cls-2"></path>
+<path d="M328.5 20L328.5 270" fill="transparent" stroke="#E0E6F1" class="zr1-cls-2"></path>
+<path d="M537.5 20L537.5 270" fill="transparent" stroke="#E0E6F1" class="zr1-cls-2"></path>
+<path d="M745.5 20L745.5 270" fill="transparent" stroke="#E0E6F1" class="zr1-cls-2"></path>
+<path d="M954.5 20L954.5 270" fill="transparent" stroke="#E0E6F1" class="zr1-cls-2"></path>
+<path d="M120.5 270L120.5 20" fill="transparent" stroke="#6E7079" stroke-linecap="round" class="zr1-cls-2"></path>
+<path d="M120 270.5L115 270.5" fill="transparent" stroke="#6E7079" class="zr1-cls-2"></path>
+<path d="M120 186.5L115 186.5" fill="transparent" stroke="#6E7079" class="zr1-cls-2"></path>
+<path d="M120 103.5L115 103.5" fill="transparent" stroke="#6E7079" class="zr1-cls-2"></path>
+<path d="M120 20.5L115 20.5" fill="transparent" stroke="#6E7079" class="zr1-cls-2"></path>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(112 228.3333)" fill="#334155">东莞市</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(112 145)" fill="#334155">贵阳市</text>
+<text dominant-baseline="central" text-anchor="end" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(112 61.6667)" fill="#334155">宣城市</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="6" transform="translate(120 278)" fill="#334155">0</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="6" transform="translate(328.5 278)" fill="#334155">1</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="6" transform="translate(537 278)" fill="#334155">2</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="6" transform="translate(745.5 278)" fill="#334155">3</text>
+<text dominant-baseline="central" text-anchor="middle" style="font-size:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" y="6" transform="translate(954 278)" fill="#334155">4</text>
+<path d="M120 207.3l834 0l0 42l-834 0Z" fill="#0b5ca8" ecmeta_series_index="0" ecmeta_data_index="0" ecmeta_ssr_type="chart" class="zr1-cls-3"></path>
+<path d="M120 124l417 0l0 42l-417 0Z" fill="#0b5ca8" ecmeta_series_index="0" ecmeta_data_index="1" ecmeta_ssr_type="chart" class="zr1-cls-3"></path>
+<path d="M120 40.7l208.5 0l0 42l-208.5 0Z" fill="#0b5ca8" ecmeta_series_index="0" ecmeta_data_index="2" ecmeta_ssr_type="chart" class="zr1-cls-3"></path>
+<text dominant-baseline="central" text-anchor="start" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(959 228.3333)" fill="#333" stroke="rgb(255,255,255)" stroke-width="2" paint-order="stroke" stroke-miterlimit="2">4</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(542 145)" fill="#333" stroke="rgb(255,255,255)" stroke-width="2" paint-order="stroke" stroke-miterlimit="2">2</text>
+<text dominant-baseline="central" text-anchor="start" style="font-size:11px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;" transform="translate(333.5 61.6667)" fill="#333" stroke="rgb(255,255,255)" stroke-width="2" paint-order="stroke" stroke-miterlimit="2">1</text>
+<path d="M-5 -5l10 0l0 10l-10 0Z" transform="translate(492 5)" fill="rgb(0,0,0)" fill-opacity="0" stroke="#ccc" stroke-width="0" class="zr1-cls-2"></path>
+<style ><![CDATA[
+.zr1-cls-2:hover {
+pointer-events:none;
+}
+.zr1-cls-3:hover {
+cursor:pointer;
+fill:rgba(12,101,184,1);
+}
+
+]]>
+
+</style>
+</svg></div><div class="chart-canvas" data-chart="bar" data-spec="{&quot;type&quot;:&quot;bar&quot;,&quot;orient&quot;:&quot;h&quot;,&quot;names&quot;:[&quot;东莞市&quot;,&quot;贵阳市&quot;,&quot;宣城市&quot;],&quot;values&quot;:[4.0,2.0,1.0]}"></div><p class="chart-status" aria-live="polite"></p></div><details class="chart-data"><summary>数据明细</summary><div class="table-wrap"><table><thead><tr><th>城市</th><th>岗位数</th></tr></thead><tbody><tr><td>东莞市</td><td>4</td></tr><tr><td>贵阳市</td><td>2</td></tr><tr><td>宣城市</td><td>1</td></tr></tbody></table></div></details></div>
 <h3 class="biz-subsection-title">招聘趋势</h3><p class="biz-section-note">招聘趋势概览（汇总指标，非逐月时间序列）</p><div class="table-wrap"><table><thead><tr><th>指标</th><th>数值</th></tr></thead><tbody><tr><td>当前招聘人数</td><td>6258.0</td></tr><tr><td>近三月招聘人数</td><td>6258.0</td></tr><tr><td>近三月岗位数</td><td>5337</td></tr><tr><td>岗位平均更新频率(秒)</td><td>18409</td></tr><tr><td>平均薪酬</td><td>11,960 元/月</td></tr></tbody></table></div>
-<h3 class="biz-subsection-title">招聘数量口径核验</h3><div class="info-list"><div class="info-row"><span class="info-label">趋势视图当前招聘人数</span><span class="info-value">6258</span></div><div class="info-row"><span class="info-label">职位检索命中总数</span><span class="info-value">174070</span></div><div class="info-row"><span class="info-label">核验结论</span><span class="info-value">口径冲突：两个产品返回不同数量，需分别解读，不得互相替代</span></div></div>
+<h3 class="biz-subsection-title">招聘数量口径核验</h3><p class="biz-section-note">对比趋势视图与职位检索产品，不将不同口径强行合并</p><div class="info-list"><div class="info-row"><span class="info-label">趋势视图当前招聘人数</span><span class="info-value">6258</span></div><div class="info-row"><span class="info-label">职位检索命中总数</span><span class="info-value">174070</span></div><div class="info-row"><span class="info-label">核验结论</span><span class="info-value">口径冲突：两个产品返回不同数量，需分别解读，不得互相替代</span></div></div>
 <h3 class="biz-subsection-title">职位薪酬明细</h3><p class="biz-section-note">共 174070 条，展示前 10 条</p><div class="table-wrap"><table><thead><tr><th>职位</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>智选车门店销售运营专员</td><td>贵阳市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】软件开发工程师</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>分销销售中级助理</td><td>宣城市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>OD软件开发/测试/算法 java、c/c++、python、js(可接24/25届非it专业)</td><td>东莞市</td><td>-</td><td>15K-30K</td><td>2026-10-27</td></tr><tr><td>智能生活馆店经理</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>智选车店长</td><td>贵阳市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>地市HR专员</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr></tbody></table></div>
 <h3 class="biz-subsection-title">招聘职位明细</h3><p class="biz-section-note">共 174070 条，展示前 10 条</p><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>渠道</th><th>薪酬</th><th>发布日期</th></tr></thead><tbody><tr><td>智选车门店销售运营专员</td><td>贵阳市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】软件开发工程师</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>分销销售中级助理</td><td>宣城市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>OD软件开发/测试/算法 java、c/c++、python、js(可接24/25届非it专业)</td><td>东莞市</td><td>-</td><td>15K-30K</td><td>2026-10-27</td></tr><tr><td>智能生活馆店经理</td><td>东莞市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>智选车店长</td><td>贵阳市</td><td>-</td><td>-</td><td>2026-10-27</td></tr><tr><td>地市HR专员</td><td>-</td><td>-</td><td>-</td><td>2026-10-27</td></tr></tbody></table></div></section>
     <section class="report-page biz-section"><div class="report-topbar"><div class="report-stripe"></div><div class="report-banner">招聘大数据报告</div></div><div class="biz-section-head"><div><h2>代表性记录</h2><p class="biz-section-note">关键明细记录 Top N。</p></div><span class="biz-tag">Records</span></div><div class="table-wrap"><table><thead><tr><th>职位名称</th><th>城市</th><th>薪酬</th></tr></thead><tbody><tr><td>智选车门店销售运营专员</td><td>贵阳市</td><td>-</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>东莞市</td><td>-</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td></tr><tr><td>【华为应届】【27秋招】软件开发工程师</td><td>东莞市</td><td>-</td></tr><tr><td>【华为应届】【27秋招】AI应用工程师</td><td>-</td><td>-</td></tr><tr><td>分销销售中级助理</td><td>宣城市</td><td>-</td></tr><tr><td>OD软件开发/测试/算法 java、c/c++、python、js(可接24/25届非it专业)</td><td>东莞市</td><td>15K-30K</td></tr><tr><td>智能生活馆店经理</td><td>东莞市</td><td>-</td></tr><tr><td>智选车店长</td><td>贵阳市</td><td>-</td></tr><tr><td>地市HR专员</td><td>-</td><td>-</td></tr></tbody></table></div></section>
